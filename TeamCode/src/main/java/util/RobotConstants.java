@@ -37,7 +37,19 @@ public class RobotConstants {
 
     LIFT_D = .00001,
 
-    LIFT_F = .00001;
+    LIFT_F = .00001,
+
+    intakeTimeV = 500,
+
+    extSubTV = 500,
+
+    submersibleTimeV = 500,
+
+    submersibleTimeV2 = 1000,
+
+    basketV = 900,
+
+    timerV = 200;
 
     public static int
 
