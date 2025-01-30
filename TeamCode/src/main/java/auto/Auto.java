@@ -70,7 +70,7 @@ public class Auto extends OpMode {
         goToFirstSample.setLinearHeadingInterpolation(scorePose.getHeading(), sample1Pose.getHeading());
 
         human1 = new Path(new BezierCurve(new Point(sample1Pose), /* Control Point */ new Point(human1ControlPose), new Point(human1Pose)));
-        goToFirstSample.setLinearHeadingInterpolation(sample1Pose.getHeading(), human1Pose.getHeading());
+        human1.setLinearHeadingInterpolation(sample1Pose.getHeading(), human1Pose.getHeading());
     }
 
     public void autonomousPathUpdate() {
