@@ -1,5 +1,9 @@
 package teleOp;
 
+import static util.LiftVelocityPIDF.p;
+import static util.LiftVelocityPIDF.i;
+import static util.LiftVelocityPIDF.d;
+import static util.LiftVelocityPIDF.f;
 import static util.RobotConstants.CLAW_CLOSED;
 import static util.RobotConstants.CLAW_DOWN;
 import static util.RobotConstants.CLAW_MID;
@@ -12,20 +16,11 @@ import static util.RobotConstants.CLAW_UP_CHAMBER;
 import static util.RobotConstants.CLAW_UP_SUB;
 import static util.RobotConstants.DOWN;
 import static util.RobotConstants.EXT;
+import static util.RobotConstants.HANG;
 import static util.RobotConstants.HIGH_CHAMBER;
 import static util.RobotConstants.INTAKE;
-import static util.RobotConstants.LIFT_D;
-import static util.RobotConstants.LIFT_F;
-import static util.RobotConstants.LIFT_I;
-import static util.RobotConstants.LIFT_P;
 import static util.RobotConstants.LOW_BASKET;
 import static util.RobotConstants.UNEXT;
-import static util.RobotConstants.basketV;
-import static util.RobotConstants.extSubTV;
-import static util.RobotConstants.intakeTimeV;
-import static util.RobotConstants.submersibleTimeV;
-import static util.RobotConstants.submersibleTimeV2;
-import static util.RobotConstants.timerV;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDFController;
@@ -46,26 +41,39 @@ import util.Hardware;
 public class Drive extends OpMode {
 
     public Follower follower;
-    public Pose startPose;
+    public Pose startPose = new Pose(0,0,0);
     public Hardware robot;
     public PIDFController controller;
     public Timer intakeTime, extSubT, submersibleTime, basket, timer;
     public Gamepad previousGamepad1, currentGamepad1;
-    public boolean LB, A, B;
+    public boolean L1, CROSS, CIRCLE, TRIANGLE;
     public double pidf, clawWristPos, clawPos, clawRotPos, extPos;
     public int liftPos, liftTargetPos, clawRot;
+    public static double
+
+    intakeTimeV = 500,
+
+    intakeExt = 1000,
+
+    extSubTV = 500,
+
+    submersibleTimeV = 500,
+
+    submersibleTimeV2 = 1000,
+
+    basketV = 900,
+
+    timerV = 500;
 
     @Override
     public void init() {
-        Constants.setConstants(FConstants.class, LConstants.class);
+        Constants.setConstants(FConstants.class,LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
 
-        startPose = new Pose(0,0,0);
-
         robot = new Hardware(hardwareMap);
 
-        controller = new PIDFController(LIFT_P, LIFT_I, LIFT_D, LIFT_F);
+        controller = new PIDFController(p, i, d, f);
 
         previousGamepad1 = new Gamepad();
         currentGamepad1 = new Gamepad();
@@ -117,41 +125,44 @@ public class Drive extends OpMode {
         robot.clawRotation.setPosition(clawRotPos);
         robot.extend.setPosition(extPos);
 
-        if(currentGamepad1.left_bumper && !previousGamepad1.left_bumper && !B) {
-            LB = !LB;
+        if(currentGamepad1.left_bumper && !previousGamepad1.left_bumper && !CIRCLE) {
+            L1 = !L1;
             intakeTime.resetTimer();
             submersibleTime.resetTimer();
             extSubT.resetTimer();
             timer.resetTimer();
         }
-        if(currentGamepad1.a && !previousGamepad1.a && !B && !LB) A = !A;
-        if(currentGamepad1.b && !previousGamepad1.b && A && !LB) {
+        if(currentGamepad1.cross && !previousGamepad1.cross && !CIRCLE && !L1) CROSS = !CROSS;
+        if(currentGamepad1.circle && !previousGamepad1.circle && CROSS && !L1) {
             basket.resetTimer();
-            B = !B;
+            CIRCLE = !CIRCLE;
         }
+        if(currentGamepad1.triangle && !previousGamepad1.triangle && CROSS && !L1 && !CIRCLE) TRIANGLE = !TRIANGLE;
 
-        if(B) {
-            scoreBasket();
+        if(TRIANGLE) {
+            if(L1) hang();
+            else hangIdle();
         } else {
-            if(basket.getElapsedTime() >= basketV) {
-                if(A) {
-                    if(LB) intakeSubmersible();
-                    else idleSubmersible();
-                }
-                else {
-                    if(LB) scoreSpecimen();
-                    else intakeSpecimen();
-                }
-            } else clawPos = CLAW_OPEN;
+            if(CIRCLE) {
+                scoreBasket();
+            } else {
+                if(basket.getElapsedTime() >= basketV) {
+                    if(CROSS) {
+                        if(L1) intakeSubmersible();
+                        else idleSubmersible();
+                    }
+                    else {
+                        if(L1) scoreSpecimen();
+                        else intakeSpecimen();
+                    }
+                } else clawPos = CLAW_OPEN;
+            }
         }
     }
 
     public void drive(Gamepad gamepad) {
-        follower.setTeleOpMovementVectors(
-                -gamepad.left_stick_y,
-                -gamepad.left_stick_x,
-                -gamepad.right_stick_x,
-                true);
+        follower.setTeleOpMovementVectors(-gamepad.left_stick_y, -gamepad.left_stick_x, -gamepad.right_stick_x, true);
+        follower.update();
     }
 
     public void intakeSpecimen() {
@@ -169,8 +180,8 @@ public class Drive extends OpMode {
         clawPos = CLAW_CLOSED;
         if(intakeTime.getElapsedTime() >= intakeTimeV) {
             liftTargetPos = HIGH_CHAMBER;
-            extPos = EXT;
             clawWristPos = CLAW_UP_CHAMBER;
+            if(intakeTime.getElapsedTime() >= intakeExt) extPos = EXT;
         } else extPos = UNEXT;
     }
 
@@ -201,5 +212,21 @@ public class Drive extends OpMode {
         clawWristPos = CLAW_UP_BASKET;
         clawRot = 2;
         clawPos = CLAW_CLOSED;
+    }
+
+    public void hangIdle() {
+        liftTargetPos = DOWN;
+        extPos = UNEXT;
+        clawWristPos = CLAW_MID;
+        clawRot = 0;
+        clawPos = CLAW_OPEN;
+    }
+
+    public void hang() {
+        liftTargetPos = HANG;
+        extPos = UNEXT;
+        clawWristPos = CLAW_MID;
+        clawRot = 0;
+        clawPos = CLAW_OPEN;
     }
 }

@@ -28,14 +28,14 @@
 
             <!--These are the Control Hub's motors. Change the ports and names of your motors.-->
             <goBILDA5202SeriesMotor name="leftFront" port="0" />
-            <goBILDA5202SeriesMotor name="leftRear" port="1" />
-            <goBILDA5202SeriesMotor name="rightFront" port="2" />
-            <goBILDA5202SeriesMotor name="rightRear" port="3" />
+            <goBILDA5202SeriesMotor name="rightFront" port="1" />
+            <goBILDA5202SeriesMotor name="rightRear" port="2" />
+            <goBILDA5202SeriesMotor name="leftRear" port="3" />
 
             <!--These are the Control Hub's servos. Change the ports and names of your servos.-->
-            <Servo name="extend" port="0"/>
-            <Servo name="clawWrist" port="1"/>
-            <Servo name="clawRotation" port="2"/>
+            <Servo name="clawWrist" port="0"/>
+            <Servo name="clawRotation" port="1"/>
+            <Servo name="extend" port="2"/>
             <Servo name="claw" port="3"/>
 
             <!--This line signifies that the Control Hub configuration has ended.-->

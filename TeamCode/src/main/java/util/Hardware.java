@@ -23,6 +23,8 @@ public class Hardware {
 
         lift.setRunMode(Motor.RunMode.VelocityControl);
 
+        lift.stopAndResetEncoder();
+
         extend = robot.get(Servo.class, "extend");
         clawWrist = robot.get(Servo.class, "clawWrist");
         clawRotation = robot.get(Servo.class, "clawRotation");
