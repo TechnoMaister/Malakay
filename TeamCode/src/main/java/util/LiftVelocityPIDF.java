@@ -25,8 +25,6 @@ public class LiftVelocityPIDF extends OpMode {
 
         robot = new Hardware(hardwareMap);
 
-        robot.lift.stopAndResetEncoder();
-
         FtcDashboard dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
     }

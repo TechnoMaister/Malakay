@@ -1,5 +1,9 @@
 package auto;
 
+import static util.ExtendVelocityPIDF.D;
+import static util.ExtendVelocityPIDF.F;
+import static util.ExtendVelocityPIDF.I;
+import static util.ExtendVelocityPIDF.P;
 import static util.LiftVelocityPIDF.p;
 import static util.LiftVelocityPIDF.i;
 import static util.LiftVelocityPIDF.d;
@@ -10,9 +14,8 @@ import static util.RobotConstants.CLAW_OPEN;
 import static util.RobotConstants.CLAW_ROT_VR;
 import static util.RobotConstants.CLAW_UP_CHAMBER;
 import static util.RobotConstants.DOWN;
-import static util.RobotConstants.EXT;
 import static util.RobotConstants.HIGH_CHAMBER;
-import static util.RobotConstants.UNEXT;
+import static util.RobotConstants.UNEXT2;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -32,19 +35,19 @@ import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
-import util.Hardware;
+import util.Hardware2;
 
 @Config
 @Autonomous(group = "Auto")
-public class Auto extends OpMode {
+public class Auto2 extends OpMode {
 
     public Follower follower;
     public Timer pathTimer, actionTimer, opmodeTimer;
-    public double pidf;
+    public double pidf, PIDF;
     public static double startDelay = 750, scoreDelay = 1250, nextStepOfTheOperation = 500;
-    public int liftPos, liftTargetPos;
-    public Hardware robot;
-    public PIDFController controller;
+    public int liftPos, liftTargetPos, extPos, extTargetPos;
+    public Hardware2 robot;
+    public PIDFController liftController, extendController;
     public int pathState;
 
     /** Start Pose of our robot */
@@ -81,7 +84,7 @@ public class Auto extends OpMode {
                 /*claw(CLAW_CLOSED);
                 clawRotation(CLAW_ROT_VR);
                 clawWrist(CLAW_UP_CHAMBER);
-                extend(EXT);
+                extTargetPos = MEXT;
                 liftTargetPos = HIGH_CHAMBER;
 
                 if(pathTimer.getElapsedTime() >= startDelay) {
@@ -102,7 +105,7 @@ public class Auto extends OpMode {
                 if(!follower.isBusy()) {
                     /*claw(CLAW_OPEN);
                     clawWrist(CLAW_MID);
-                    extend(UNEXT);
+                    extTargetPos = UNEXT2;
                     if(pathTimer.getElapsedTime() >= scoreDelay) liftTargetPos = DOWN;*/
 
                     follower.followPath(goToFirstSample,true);
@@ -131,8 +134,10 @@ public class Auto extends OpMode {
         follower.update();
         autonomousPathUpdate();
 
+        extTargetPos = UNEXT2;
+
         //lift();
-        extend(UNEXT);
+        extend();
 
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
@@ -152,9 +157,10 @@ public class Auto extends OpMode {
         follower.setStartingPose(startPose);
         buildPaths();
 
-        robot = new Hardware(hardwareMap);
+        robot = new Hardware2(hardwareMap);
 
-        controller = new PIDFController(p, i, d, f);
+        liftController = new PIDFController(p, i, d, f);
+        extendController = new PIDFController(P, I, D, F);
 
         FtcDashboard dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
@@ -167,9 +173,9 @@ public class Auto extends OpMode {
     }
 
     public void lift() {
-        controller.setPIDF(p, i, d, f);
+        liftController.setPIDF(p, i, d, f);
         liftPos = robot.leftLift.getCurrentPosition();
-        pidf = controller.calculate(liftPos, liftTargetPos);
+        pidf = liftController.calculate(liftPos, liftTargetPos);
         robot.lift.set(pidf);
     }
 
@@ -185,8 +191,11 @@ public class Auto extends OpMode {
         robot.clawRotation.setPosition(position);
     }
 
-    public void extend(double position) {
-        robot.extend.setPosition(position);
+    public void extend() {
+        extendController.setPIDF(P, I, D, F);
+        extPos = robot.extend.getCurrentPosition();
+        PIDF = extendController.calculate(extPos, extTargetPos);
+        robot.extend.set(pidf);
     }
 }
 

@@ -41,6 +41,12 @@ public class RobotConstants {
 
     INTAKE = 550,
 
-    DOWN = 0;
+    DOWN = 0,
+
+    EXT2 = 500,
+
+    UNEXT2 = 0,
+
+    MEXT = 250;
 
 }
