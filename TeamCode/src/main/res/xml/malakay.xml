@@ -14,9 +14,13 @@
 
             <!--These are the Expansion Hub's motors. Change the ports and names of your motors.-->
             <goBILDA5202SeriesMotor name="leftLift" port="0"/>
-            <UnspecifiedMotor name="strafeEncoder" port="1"/>
             <goBILDA5202SeriesMotor name="rightLift" port="2"/>
-            <UnspecifiedMotor name="forwardEncoder" port="3"/>
+            <goBILDA5202SeriesMotor name="extend" port="3"/>
+
+            <!--These are the Expansion Hub's servos. Change the ports and names of your servos.-->
+            <Servo name="claw" port="0"/>
+            <Servo name="clawRotation" port="1"/>
+            <Servo name="clawWrist" port="2"/>
 
             <!--This line signifies that the Expansion Hub configuration has ended.-->
         </LynxModule>
@@ -31,12 +35,6 @@
             <goBILDA5202SeriesMotor name="rightFront" port="1" />
             <goBILDA5202SeriesMotor name="rightRear" port="2" />
             <goBILDA5202SeriesMotor name="leftRear" port="3" />
-
-            <!--These are the Control Hub's servos. Change the ports and names of your servos.-->
-            <Servo name="clawWrist" port="0"/>
-            <Servo name="clawRotation" port="1"/>
-            <Servo name="extend" port="2"/>
-            <Servo name="claw" port="3"/>
 
             <!--This line signifies that the Control Hub configuration has ended.-->
         </LynxModule>
