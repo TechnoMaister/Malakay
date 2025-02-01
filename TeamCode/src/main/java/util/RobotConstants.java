@@ -25,11 +25,7 @@ public class RobotConstants {
 
     CLAW_MID = .6,
 
-    CLAW_DOWN = .95,
-
-    UNEXT = .4,
-
-    EXT = .1;
+    CLAW_DOWN = .95;
 
     public static int
 
@@ -43,10 +39,10 @@ public class RobotConstants {
 
     DOWN = 0,
 
-    EXT2 = 500,
+    EXT = 2000,
 
-    UNEXT2 = 0,
+    MEXT = 1000,
 
-    MEXT = 250;
+    UNEXT = 0;
 
 }

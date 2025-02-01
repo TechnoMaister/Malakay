@@ -1,48 +1,32 @@
-<?xml version='1.0' encoding='UTF-8' standalone='yes' ?> <!--This is the xml declaration and can be copy-pasted-->
-<!--Author: Havish Sripada - 12808 RevAmped Robotics-->
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
 
-<!--This declares the robot class, and can be copy-pasted.-->
 <Robot type="FirstInspires-FTC">
 
-    <!--This line declares the Control Hub Portal which contains both hubs. It can be copy-pasted-->
     <LynxUsbDevice name="Control Hub Portal" serialNumber="(embedded)" parentModuleAddress="173">
 
-        <!--This line declares the Expansion Hub. We use RS485 connection, so we declare it with a port.-->
         <LynxModule name="Expansion Hub 2" port="2">
 
-            <!--Configure hardware devices here-->
-
-            <!--These are the Expansion Hub's motors. Change the ports and names of your motors.-->
             <goBILDA5202SeriesMotor name="leftLift" port="0"/>
-            <goBILDA5202SeriesMotor name="rightLift" port="2"/>
-            <goBILDA5202SeriesMotor name="extend" port="3"/>
+            <goBILDA5202SeriesMotor name="rightLift" port="1"/>
+            <TetrixMotor name="extend" port="2"/>
 
-            <!--These are the Expansion Hub's servos. Change the ports and names of your servos.-->
             <Servo name="claw" port="0"/>
             <Servo name="clawRotation" port="1"/>
             <Servo name="clawWrist" port="2"/>
 
-            <!--This line signifies that the Expansion Hub configuration has ended.-->
         </LynxModule>
 
-        <!--This line declares the Control Hub and can be copy-pasted.-->
         <LynxModule name="Control Hub" port="173">
 
-            <!--Configure hardware devices here-->
-
-            <!--These are the Control Hub's motors. Change the ports and names of your motors.-->
             <goBILDA5202SeriesMotor name="leftFront" port="0" />
             <goBILDA5202SeriesMotor name="rightFront" port="1" />
             <goBILDA5202SeriesMotor name="rightRear" port="2" />
             <goBILDA5202SeriesMotor name="leftRear" port="3" />
 
-            <!--This line signifies that the Control Hub configuration has ended.-->
+            <LynxEmbeddedIMU name="imu" port="0" bus="0"/>
+
         </LynxModule>
 
-        <!--This line signifies that the Control Hub Portal configuration has ended.-->
     </LynxUsbDevice>
 
-    <!--Put other devices here. Most teams don't need to worry about this unless they are using things like webcams that don't go in the main ports.-->
-
-    <!--This line signifies that the robot configuration has ended-->
 </Robot>

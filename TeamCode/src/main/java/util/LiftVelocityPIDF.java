@@ -11,9 +11,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 @TeleOp(group = "util")
 public class LiftVelocityPIDF extends OpMode {
 
-    private PIDFController controller;
+    private PIDFController liftController;
 
-    public static double p = 0.0017, i = 0.001, d = 0.00001, f = 0.00001;
+    public static double p = 0.003, i = 0.003, d = 0.0004, f = 0.00015;
 
     public static int target = 0;
 
@@ -21,7 +21,7 @@ public class LiftVelocityPIDF extends OpMode {
 
     @Override
     public void init() {
-        controller = new PIDFController(p, i, d, f);
+        liftController = new PIDFController(p, i, d, f);
 
         robot = new Hardware(hardwareMap);
 
@@ -31,10 +31,10 @@ public class LiftVelocityPIDF extends OpMode {
 
     @Override
     public void loop() {
-        controller.setPIDF(p, i, d, f);
+        liftController.setPIDF(p, i, d, f);
         int liftPos = robot.leftLift.getCurrentPosition();
         int rightLift = robot.rightLift.getCurrentPosition();
-        double pidf = controller.calculate(liftPos, target);
+        double pidf = liftController.calculate(liftPos, target);
 
         robot.lift.set(pidf);
 

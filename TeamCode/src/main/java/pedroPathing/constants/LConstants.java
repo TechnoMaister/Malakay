@@ -6,14 +6,14 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 public class LConstants {
     static {
-        TwoWheelConstants.forwardTicksToInches = .0007;
-        TwoWheelConstants.strafeTicksToInches = .0007;
-        TwoWheelConstants.forwardY = -4.1338582677;
-        TwoWheelConstants.strafeX = -7.874015748;
+        TwoWheelConstants.forwardTicksToInches = .0005;
+        TwoWheelConstants.strafeTicksToInches = .0005;
+        TwoWheelConstants.forwardY = 13555;
+        TwoWheelConstants.strafeX = -13555;
         TwoWheelConstants.forwardEncoder_HardwareMapName = "leftFront";
         TwoWheelConstants.strafeEncoder_HardwareMapName = "rightFront";
-        TwoWheelConstants.forwardEncoderDirection = Encoder.REVERSE;
-        TwoWheelConstants.strafeEncoderDirection = Encoder.FORWARD;
+        TwoWheelConstants.forwardEncoderDirection = Encoder.FORWARD;
+        TwoWheelConstants.strafeEncoderDirection = Encoder.REVERSE;
         TwoWheelConstants.IMU_HardwareMapName = "imu";
         TwoWheelConstants.IMU_Orientation = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.RIGHT);
     }
