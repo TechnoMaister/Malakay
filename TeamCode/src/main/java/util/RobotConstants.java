@@ -31,7 +31,7 @@ public class RobotConstants {
 
     LOW_BASKET = 2400,
 
-    HIGH_CHAMBER = 1800,
+    HIGH_CHAMBER = 1600,
 
     HANG = 1300,
 
@@ -39,9 +39,9 @@ public class RobotConstants {
 
     DOWN = 0,
 
-    EXT = 2000,
+    EXT = 4000,
 
-    MEXT = 1000,
+    MEXT = 2000,
 
     UNEXT = 0;
 
