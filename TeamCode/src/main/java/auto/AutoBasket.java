@@ -4,6 +4,7 @@ import static util.LiftVelocityPIDF.p;
 import static util.LiftVelocityPIDF.i;
 import static util.LiftVelocityPIDF.d;
 import static util.LiftVelocityPIDF.f;
+import static util.LiftVelocityPIDF.target;
 import static util.RobotConstants.CLAW_CLOSED;
 import static util.RobotConstants.CLAW_MID;
 import static util.RobotConstants.CLAW_OPEN;
@@ -37,7 +38,7 @@ import util.Hardware;
 
 @Config
 @Autonomous(group = "Auto")
-public class Auto extends OpMode {
+public class AutoBasket extends OpMode {
 
     public Follower follower;
     public Timer pathTimer, opmodeTimer;
@@ -49,74 +50,44 @@ public class Auto extends OpMode {
     public PIDFController liftController;
     public int pathState;
 
-    private final Pose startPoint = new Pose(134.2, 80.8, Math.toRadians(-180));
-    private final Pose score2ctr = new Pose(130, 80.8,  Math.toRadians(-180));
+    private final Pose startPoint = new Pose(133.8, 38.2, Math.toRadians(-90));
 
-    private final Pose line1 = new Pose(106, 80.8,  Math.toRadians(-180));
-    private final Pose score1 = new Pose(103.5, 80,  Math.toRadians(-180));
-    private final Pose score2 = new Pose(102, 70,  Math.toRadians(-180));
+    private final Pose line1 = new Pose(133.8, 23);
 
-    private final Pose line2 = new Pose(100, 105);
+    private final Pose line2 = new Pose(98, 30);
 
-    private final Pose line3 = new Pose(80, 115);
-    private final Pose line3ctr = new Pose(80, 105);
+    private final Pose line3 = new Pose(98, 20);
 
-    private final Pose line4 = new Pose(120, 115);
+    private final Pose line4 = new Pose(98, 10);
 
-    private final Pose line5 = new Pose(80, 125);
-    public final Pose line5ctr = new Pose(80, 110);
-
-    private final Pose line6 = new Pose(120, 125);
-
-    private final Pose line7 = new Pose(120, 124, Math.toRadians(0));
-
-    private Path scorePreload, scoreSpecimen, scoreSpecimen2, getSpecimen;
-    private PathChain pushSamples;
+    private Path scorePreload, getSample1, scoreSample1, getSample2, scoreSample2, getSample3, scoreSample3;
 
     public void buildPaths() {
         scorePreload = new Path(new BezierLine(new Point(startPoint), new Point(line1)));
-        scorePreload.setConstantHeadingInterpolation(Math.toRadians(-180));
+        scorePreload.setConstantHeadingInterpolation(Math.toRadians(-90));
 
-        scoreSpecimen = new Path(new BezierCurve(new Point(line7), new Point(startPoint), new Point(score1)));
-        scoreSpecimen.setLinearHeadingInterpolation(line7.getHeading(), score1.getHeading());
+        getSample1 = new Path(new BezierCurve(new Point(line1), new Point(startPoint), new Point(line2)));
+        getSample1.setConstantHeadingInterpolation(Math.toRadians(-90));
 
-        scoreSpecimen2 = new Path(new BezierCurve(new Point(line7), new Point(score2ctr), new Point(score2)));
-        scoreSpecimen2.setLinearHeadingInterpolation(line7.getHeading(), score2.getHeading());
+        scoreSample1 = new Path(new BezierCurve(new Point(line2), new Point(startPoint), new Point(line1)));
+        scoreSample1.setConstantHeadingInterpolation(Math.toRadians(-90));
 
-        getSpecimen = new Path(new BezierLine(new Point(line1), new Point(line7)));
-        getSpecimen.setLinearHeadingInterpolation(line1.getHeading(), line7.getHeading());
+        getSample2 = new Path(new BezierCurve(new Point(line1), new Point(startPoint), new Point(line3)));
+        getSample2.setConstantHeadingInterpolation(Math.toRadians(-90));
 
-        pushSamples = follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(line1), new Point(startPoint), new Point(line2)))
-                .setConstantHeadingInterpolation(Math.toRadians(-180))
+        scoreSample2 = new Path(new BezierCurve(new Point(line3), new Point(startPoint), new Point(line1)));
+        scoreSample2.setConstantHeadingInterpolation(Math.toRadians(-90));
 
-                .addPath(new BezierCurve(new Point(line2), new Point(line3ctr), new Point(line3)))
-                .setConstantHeadingInterpolation(Math.toRadians(-180))
+        getSample3 = new Path(new BezierCurve(new Point(line1), new Point(line2), new Point(line4)));
+        getSample3.setConstantHeadingInterpolation(Math.toRadians(-90));
 
-                .addPath(new BezierLine(new Point(line3), new Point(line4)))
-                .setConstantHeadingInterpolation(Math.toRadians(-180))
-
-                .addPath(new BezierCurve(new Point(line4), new Point(line5ctr), new Point(line5)))
-                .setConstantHeadingInterpolation(Math.toRadians(-180))
-
-                .addPath(new BezierLine(new Point(line5), new Point(line6)))
-                .setConstantHeadingInterpolation(Math.toRadians(-180))
-
-                .addPath(new BezierLine(new Point(line6), new Point(line7)))
-                .setConstantHeadingInterpolation(Math.toRadians(0))
-
-                .build();
+        scoreSample3 = new Path(new BezierCurve(new Point(line4), new Point(line2), new Point(line1)));
+        scoreSample3.setConstantHeadingInterpolation(Math.toRadians(-90));
     }
 
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
-                claw(CLAW_CLOSED);
-                clawRotation(CLAW_ROT_VR);
-                clawWrist(CLAW_UP_CHAMBER);
-                extend(MEXT);
-                liftTargetPos = HIGH_CHAMBER;
-
                 if(pathTimer.getElapsedTime() >= startDelay) {
                     follower.followPath(scorePreload, true);
                     setPathState(1);
@@ -131,44 +102,37 @@ public class Auto extends OpMode {
                 */
 
                 if(!follower.isBusy()) {
-                    claw(CLAW_OPEN);
-                    if(pathTimer.getElapsedTime() >= openClaw) {
-                        follower.followPath(pushSamples, true);
-                        setPathState(2);
-                    }
+                    follower.followPath(getSample1, true);
+                    setPathState(2);
                 }
                 break;
             case 2:
                 if(!follower.isBusy()) {
-                    claw(CLAW_CLOSED);
-                    if(pathTimer.getElapsedTime() >= openClaw) {
-                        follower.followPath(scoreSpecimen, true);
-                        setPathState(3);
-                    }
+                    follower.followPath(scoreSample1, true);
+                    setPathState(3);
                 }
                 break;
             case 3:
                 if(!follower.isBusy()) {
-                    claw(CLAW_OPEN);
-                    if(pathTimer.getElapsedTime() >= openClaw) {
-                        follower.followPath(getSpecimen, true);
-                        setPathState(4);
-                    }
+                    follower.followPath(getSample2, true);
+                    setPathState(4);
                 }
                 break;
             case 4:
                 if(!follower.isBusy()) {
-                    claw(CLAW_CLOSED);
-                    if(pathTimer.getElapsedTime() >= openClaw + 600) {
-                        follower.followPath(scoreSpecimen2, true);
-
-                        setPathState(5);
-                    }
+                    follower.followPath(scoreSample2, true);
+                    setPathState(5);
                 }
                 break;
             case 5:
                 if(!follower.isBusy()) {
-                    follower.followPath(getSpecimen, true);
+                    follower.followPath(getSample3, true);
+                    setPathState(6);
+                }
+                break;
+            case 6:
+                if(!follower.isBusy()) {
+                    follower.followPath(scoreSample3, true);
                     setPathState(-1);
                 }
                 break;
@@ -185,29 +149,7 @@ public class Auto extends OpMode {
         follower.update();
         autonomousPathUpdate();
 
-        lift();
-
-        if((pathState == 2 || pathState == 4) && pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
-            liftTargetPos = INTAKE;
-            clawWrist(CLAW_MID);
-            extend(UNEXT);
-        }
-
-        if((pathState == 3 || pathState == 5) && pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
-            liftTargetPos = HIGH_CHAMBER;
-            extend(MEXT);
-            clawWrist(CLAW_UP_CHAMBER);
-        }
-
-        if(pathState == -1) {
-            if(pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
-                liftTargetPos = 0;
-                extend(UNEXT);
-                claw(CLAW_CLOSED);
-                clawWrist(CLAW_UP_CHAMBER);
-                claw(CLAW_CLOSED);
-            } else claw(CLAW_OPEN);
-        }
+        //lift();
 
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());

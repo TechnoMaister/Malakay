@@ -233,7 +233,7 @@ public class Drive extends OpMode {
     }
 
     public void hangIdle() {
-        liftTargetPos = DOWN;
+        liftTargetPos = 0;
         extTargetPos = UNEXT;
         clawWristPos = CLAW_MID;
         clawRot = 0;

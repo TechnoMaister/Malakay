@@ -75,8 +75,6 @@ public class Hardware {
 
         extend.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        extend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
         clawWrist = robot.get(Servo.class, "clawWrist");
         clawRotation = robot.get(Servo.class, "clawRotation");
         claw = robot.get(Servo.class, "claw");
