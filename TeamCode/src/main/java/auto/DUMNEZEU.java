@@ -20,12 +20,15 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
+import com.pedropathing.localization.PoseUpdater;
 import com.pedropathing.pathgen.BezierCurve;
 import com.pedropathing.pathgen.BezierLine;
 import com.pedropathing.pathgen.Path;
 import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
+import com.pedropathing.util.DashboardPoseTracker;
+import com.pedropathing.util.Drawing;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -37,8 +40,10 @@ import util.Hardware;
 
 @Config
 @Autonomous(group = "Auto")
-public class Auto extends OpMode {
+public class DUMNEZEU extends OpMode {
 
+    public PoseUpdater poseUpdater;
+    public DashboardPoseTracker dashboardPoseTracker;
     public Follower follower;
     public Timer pathTimer, opmodeTimer;
     public double pidf;
@@ -49,63 +54,73 @@ public class Auto extends OpMode {
     public PIDFController liftController;
     public int pathState;
 
-    private final Pose startPoint = new Pose(134.2, 80.8, Math.toRadians(-180));
-    private final Pose score2ctr = new Pose(130, 80.8,  Math.toRadians(-180));
+    public Pose startPose = new Pose(135.2, 81.8, Math.toRadians(-180));
 
-    private final Pose line1 = new Pose(106, 80.8,  Math.toRadians(-180));
-    private final Pose score1 = new Pose(103.5, 80,  Math.toRadians(-180));
-    private final Pose score2 = new Pose(102, 70,  Math.toRadians(-180));
+    public Pose backPose = new Pose(120, 81.8);
 
-    private final Pose line2 = new Pose(100, 105);
+    public Pose chamberPose1 = new Pose(108, 81.8, Math.toRadians(-180));
 
-    private final Pose line3 = new Pose(80, 115);
-    private final Pose line3ctr = new Pose(80, 105);
+    public Pose firstSamplePose = new Pose(79, 115);
+    public Pose firstSampleControlPose1 = new Pose(125.3, 129.7);
+    public Pose firstSampleControlPose2 = new Pose(78.7, 92);
 
-    private final Pose line4 = new Pose(120, 115);
+    public Pose humanPose1 = new Pose(110, 120);
 
-    private final Pose line5 = new Pose(80, 125);
-    public final Pose line5ctr = new Pose(80, 110);
+    public Pose secondSamplePose = new Pose(122.2, 120);
+    public Pose secondSampleControlPose1 = new Pose(42.6, 98);
+    public Pose secondSampleControlPose2 = new Pose(50.3, 136.4);
 
-    private final Pose line6 = new Pose(120, 125);
+    public Pose humanPose2 = new Pose(115, 132, Math.toRadians(-180));
 
-    private final Pose line7 = new Pose(120, 124, Math.toRadians(0));
+    public Pose intakePose = new Pose(120, 121.2, Math.toRadians(0));
 
-    private Path scorePreload, scoreSpecimen, scoreSpecimen2, getSpecimen;
-    private PathChain pushSamples;
+    public Pose chamberPose2 = new Pose(104, 81.8, Math.toRadians(-180)); // 76
+
+    public Pose intakePose2 = new Pose(119, 125.3, Math.toRadians(0));
+
+    public Pose chamberPose3 = new Pose(100, 81.8, Math.toRadians(-180)); // 70.7
+
+    public Pose parkPose = new Pose(123, 123, Math.toRadians(0));
+
+    public Path scorePreload, scoreFirstSpecimen, intake, scoreSecondSpecimen, park;
+    public PathChain pushSamples;
 
     public void buildPaths() {
-        scorePreload = new Path(new BezierLine(new Point(startPoint), new Point(line1)));
-        scorePreload.setConstantHeadingInterpolation(Math.toRadians(-180));
-
-        scoreSpecimen = new Path(new BezierCurve(new Point(line7), new Point(startPoint), new Point(score1)));
-        scoreSpecimen.setLinearHeadingInterpolation(line7.getHeading(), score1.getHeading());
-
-        scoreSpecimen2 = new Path(new BezierCurve(new Point(line7), new Point(score2ctr), new Point(score2)));
-        scoreSpecimen2.setLinearHeadingInterpolation(line7.getHeading(), score2.getHeading());
-
-        getSpecimen = new Path(new BezierLine(new Point(line1), new Point(line7)));
-        getSpecimen.setLinearHeadingInterpolation(line1.getHeading(), line7.getHeading());
+        scorePreload = new Path(new BezierLine(new Point(startPose), new Point(chamberPose1)));
+        scorePreload.setConstantHeadingInterpolation(chamberPose1.getHeading());
 
         pushSamples = follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(line1), new Point(startPoint), new Point(line2)))
-                .setConstantHeadingInterpolation(Math.toRadians(-180))
+                .addPath(new BezierLine(new Point(chamberPose1), new Point(backPose)))
+                .setConstantHeadingInterpolation(startPose.getHeading())
 
-                .addPath(new BezierCurve(new Point(line2), new Point(line3ctr), new Point(line3)))
-                .setConstantHeadingInterpolation(Math.toRadians(-180))
+                .addPath(new BezierCurve(new Point(backPose), new Point(firstSampleControlPose1), new Point(firstSampleControlPose2), new Point(firstSamplePose)))
+                .setConstantHeadingInterpolation(chamberPose1.getHeading())
 
-                .addPath(new BezierLine(new Point(line3), new Point(line4)))
-                .setConstantHeadingInterpolation(Math.toRadians(-180))
+                .addPath(new BezierLine(new Point(firstSamplePose), new Point(humanPose1)))
+                .setConstantHeadingInterpolation(startPose.getHeading())
 
-                .addPath(new BezierCurve(new Point(line4), new Point(line5ctr), new Point(line5)))
-                .setConstantHeadingInterpolation(Math.toRadians(-180))
+                .addPath(new BezierCurve(new Point(humanPose1), new Point(secondSampleControlPose1), new Point(secondSampleControlPose2), new Point(secondSamplePose)))
+                .setConstantHeadingInterpolation(startPose.getHeading())
 
-                .addPath(new BezierLine(new Point(line5), new Point(line6)))
-                .setConstantHeadingInterpolation(Math.toRadians(-180))
+                /*.addPath(new BezierLine(new Point(secondSamplePose), new Point(humanPose2)))
+                .setConstantHeadingInterpolation(startPose.getHeading())
 
-                .addPath(new BezierLine(new Point(line6), new Point(line7)))
-                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(new BezierLine(new Point(humanPose2), new Point(intakePose)))
+                .setLinearHeadingInterpolation(humanPose2.getHeading(), intakePose.getHeading())*/
 
                 .build();
+
+        scoreFirstSpecimen = new Path(new BezierCurve(new Point(intakePose), new Point(chamberPose2)));
+        scoreFirstSpecimen.setLinearHeadingInterpolation(intakePose.getHeading(), chamberPose2.getHeading());
+
+        intake = new Path(new BezierCurve(new Point(chamberPose2), new Point(intakePose2)));
+        intake.setLinearHeadingInterpolation(chamberPose2.getHeading(), intakePose2.getHeading());
+
+        scoreSecondSpecimen = new Path(new BezierCurve(new Point(intakePose2), new Point(chamberPose3)));
+        scoreSecondSpecimen.setLinearHeadingInterpolation(intakePose2.getHeading(), chamberPose3.getHeading());
+
+        park = new Path(new BezierLine(new Point(chamberPose3), new Point(parkPose)));
+        park.setLinearHeadingInterpolation(chamberPose3.getHeading(), parkPose.getHeading());
     }
 
     public void autonomousPathUpdate() {
@@ -134,7 +149,7 @@ public class Auto extends OpMode {
                     claw(CLAW_OPEN);
                     if(pathTimer.getElapsedTime() >= openClaw) {
                         follower.followPath(pushSamples, true);
-                        setPathState(2);
+                        setPathState(-1);
                     }
                 }
                 break;
@@ -142,7 +157,7 @@ public class Auto extends OpMode {
                 if(!follower.isBusy()) {
                     claw(CLAW_CLOSED);
                     if(pathTimer.getElapsedTime() >= openClaw) {
-                        follower.followPath(scoreSpecimen, true);
+                        follower.followPath(scoreFirstSpecimen, true);
                         setPathState(3);
                     }
                 }
@@ -151,7 +166,7 @@ public class Auto extends OpMode {
                 if(!follower.isBusy()) {
                     claw(CLAW_OPEN);
                     if(pathTimer.getElapsedTime() >= openClaw) {
-                        follower.followPath(getSpecimen, true);
+                        follower.followPath(intake, true);
                         setPathState(4);
                     }
                 }
@@ -160,7 +175,7 @@ public class Auto extends OpMode {
                 if(!follower.isBusy()) {
                     claw(CLAW_CLOSED);
                     if(pathTimer.getElapsedTime() >= openClaw + 600) {
-                        follower.followPath(scoreSpecimen2, true);
+                        follower.followPath(scoreSecondSpecimen, true);
 
                         setPathState(5);
                     }
@@ -168,7 +183,7 @@ public class Auto extends OpMode {
                 break;
             case 5:
                 if(!follower.isBusy()) {
-                    follower.followPath(getSpecimen, true);
+                    follower.followPath(park, true);
                     setPathState(-1);
                 }
                 break;
@@ -214,6 +229,13 @@ public class Auto extends OpMode {
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
         telemetry.update();
+
+        poseUpdater.update();
+        dashboardPoseTracker.update();
+
+        Drawing.drawPoseHistory(dashboardPoseTracker, "#4CAF50");
+        Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
+        Drawing.sendPacket();
     }
 
     @Override
@@ -224,7 +246,7 @@ public class Auto extends OpMode {
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
-        follower.setStartingPose(startPoint);
+        follower.setStartingPose(startPose);
         buildPaths();
 
         robot = new Hardware(hardwareMap);
@@ -234,6 +256,15 @@ public class Auto extends OpMode {
 
         FtcDashboard dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+
+        poseUpdater = new PoseUpdater(hardwareMap);
+
+        dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
+
+        poseUpdater.setStartingPose(startPose);
+
+        Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
+        Drawing.sendPacket();
     }
 
     @Override

@@ -4,16 +4,6 @@ import static util.LiftVelocityPIDF.p;
 import static util.LiftVelocityPIDF.i;
 import static util.LiftVelocityPIDF.d;
 import static util.LiftVelocityPIDF.f;
-import static util.LiftVelocityPIDF.target;
-import static util.RobotConstants.CLAW_CLOSED;
-import static util.RobotConstants.CLAW_MID;
-import static util.RobotConstants.CLAW_OPEN;
-import static util.RobotConstants.CLAW_ROT_VR;
-import static util.RobotConstants.CLAW_UP_CHAMBER;
-import static util.RobotConstants.HIGH_CHAMBER;
-import static util.RobotConstants.INTAKE;
-import static util.RobotConstants.MEXT;
-import static util.RobotConstants.UNEXT;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -21,12 +11,13 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
-import com.pedropathing.pathgen.BezierCurve;
+import com.pedropathing.localization.PoseUpdater;
 import com.pedropathing.pathgen.BezierLine;
 import com.pedropathing.pathgen.Path;
-import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
+import com.pedropathing.util.DashboardPoseTracker;
+import com.pedropathing.util.Drawing;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -38,8 +29,10 @@ import util.Hardware;
 
 @Config
 @Autonomous(group = "Auto")
-public class AutoBasket extends OpMode {
+public class AutoRedBasket extends OpMode {
 
+    public PoseUpdater poseUpdater;
+    public DashboardPoseTracker dashboardPoseTracker;
     public Follower follower;
     public Timer pathTimer, opmodeTimer;
     public double pidf;
@@ -50,39 +43,46 @@ public class AutoBasket extends OpMode {
     public PIDFController liftController;
     public int pathState;
 
-    private final Pose startPoint = new Pose(133.8, 38.2, Math.toRadians(-90));
+    public Pose startPose = new Pose(135.5, 39, Math.toRadians(-90));
 
-    private final Pose line1 = new Pose(133.8, 23);
+    public Pose basketPose1 = new Pose(135.5, 20, Math.toRadians(-90));
 
-    private final Pose line2 = new Pose(98, 30);
+    public Pose firstSamplePose = new Pose(116.3, 24, Math.toRadians(-180));
 
-    private final Pose line3 = new Pose(98, 20);
+    public Pose basketPose2 = new Pose(127, 13.5, Math.toRadians(-45));
 
-    private final Pose line4 = new Pose(98, 10);
+    public Pose secondSamplePose = new Pose(116.3, 12.5, Math.toRadians(-180));
 
-    private Path scorePreload, getSample1, scoreSample1, getSample2, scoreSample2, getSample3, scoreSample3;
+    public Pose thirdSamplePose = new Pose(99.8, 21, Math.toRadians(-90));
+
+    public Pose parkPose = new Pose(79.7, 43, Math.toRadians(90));
+
+    public Path scorePreload, getFirstSample, scoreFirstSample, getSecondSample, scoreSecondSample, getThirdSample, scoreThirdSample, park;
 
     public void buildPaths() {
-        scorePreload = new Path(new BezierLine(new Point(startPoint), new Point(line1)));
-        scorePreload.setConstantHeadingInterpolation(Math.toRadians(-90));
+        scorePreload = new Path(new BezierLine(new Point(startPose), new Point(basketPose1)));
+        scorePreload.setConstantHeadingInterpolation(basketPose1.getHeading());
 
-        getSample1 = new Path(new BezierCurve(new Point(line1), new Point(startPoint), new Point(line2)));
-        getSample1.setConstantHeadingInterpolation(Math.toRadians(-90));
+        getFirstSample = new Path(new BezierLine(new Point(basketPose1), new Point(firstSamplePose)));
+        getFirstSample.setLinearHeadingInterpolation(basketPose1.getHeading(), firstSamplePose.getHeading());
 
-        scoreSample1 = new Path(new BezierCurve(new Point(line2), new Point(startPoint), new Point(line1)));
-        scoreSample1.setConstantHeadingInterpolation(Math.toRadians(-90));
+        scoreFirstSample = new Path(new BezierLine(new Point(firstSamplePose), new Point(basketPose2)));
+        scoreFirstSample.setLinearHeadingInterpolation(firstSamplePose.getHeading(), basketPose2.getHeading());
 
-        getSample2 = new Path(new BezierCurve(new Point(line1), new Point(startPoint), new Point(line3)));
-        getSample2.setConstantHeadingInterpolation(Math.toRadians(-90));
+        getSecondSample = new Path(new BezierLine(new Point(basketPose2), new Point(secondSamplePose)));
+        getSecondSample.setLinearHeadingInterpolation(basketPose2.getHeading(), secondSamplePose.getHeading());
 
-        scoreSample2 = new Path(new BezierCurve(new Point(line3), new Point(startPoint), new Point(line1)));
-        scoreSample2.setConstantHeadingInterpolation(Math.toRadians(-90));
+        scoreSecondSample = new Path(new BezierLine(new Point(secondSamplePose), new Point(basketPose2)));
+        scoreSecondSample.setLinearHeadingInterpolation(secondSamplePose.getHeading(), basketPose2.getHeading());
 
-        getSample3 = new Path(new BezierCurve(new Point(line1), new Point(line2), new Point(line4)));
-        getSample3.setConstantHeadingInterpolation(Math.toRadians(-90));
+        getThirdSample = new Path(new BezierLine(new Point(basketPose2), new Point(thirdSamplePose)));
+        getThirdSample.setLinearHeadingInterpolation(basketPose2.getHeading(), thirdSamplePose.getHeading());
 
-        scoreSample3 = new Path(new BezierCurve(new Point(line4), new Point(line2), new Point(line1)));
-        scoreSample3.setConstantHeadingInterpolation(Math.toRadians(-90));
+        scoreThirdSample = new Path(new BezierLine(new Point(thirdSamplePose), new Point(basketPose2)));
+        scoreThirdSample.setLinearHeadingInterpolation(thirdSamplePose.getHeading(), basketPose2.getHeading());
+
+        park = new Path(new BezierLine(new Point(basketPose2), new Point(parkPose)));
+        park.setLinearHeadingInterpolation(basketPose2.getHeading(), parkPose.getHeading());
     }
 
     public void autonomousPathUpdate() {
@@ -102,37 +102,43 @@ public class AutoBasket extends OpMode {
                 */
 
                 if(!follower.isBusy()) {
-                    follower.followPath(getSample1, true);
-                    setPathState(2);
+                    follower.followPath(park, true);
+                    setPathState(-1);
                 }
                 break;
             case 2:
                 if(!follower.isBusy()) {
-                    follower.followPath(scoreSample1, true);
+                    follower.followPath(scoreFirstSample, true);
                     setPathState(3);
                 }
                 break;
             case 3:
                 if(!follower.isBusy()) {
-                    follower.followPath(getSample2, true);
+                    follower.followPath(getSecondSample, true);
                     setPathState(4);
                 }
                 break;
             case 4:
                 if(!follower.isBusy()) {
-                    follower.followPath(scoreSample2, true);
+                    follower.followPath(scoreSecondSample, true);
                     setPathState(5);
                 }
                 break;
             case 5:
                 if(!follower.isBusy()) {
-                    follower.followPath(getSample3, true);
+                    follower.followPath(getThirdSample, true);
                     setPathState(6);
                 }
                 break;
             case 6:
                 if(!follower.isBusy()) {
-                    follower.followPath(scoreSample3, true);
+                    follower.followPath(scoreThirdSample, true);
+                    setPathState(7);
+                }
+                break;
+            case 7:
+                if(!follower.isBusy()) {
+                    follower.followPath(park, true);
                     setPathState(-1);
                 }
                 break;
@@ -156,6 +162,13 @@ public class AutoBasket extends OpMode {
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
         telemetry.update();
+
+        poseUpdater.update();
+        dashboardPoseTracker.update();
+
+        Drawing.drawPoseHistory(dashboardPoseTracker, "#4CAF50");
+        Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
+        Drawing.sendPacket();
     }
 
     @Override
@@ -166,7 +179,7 @@ public class AutoBasket extends OpMode {
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
-        follower.setStartingPose(startPoint);
+        follower.setStartingPose(startPose);
         buildPaths();
 
         robot = new Hardware(hardwareMap);
@@ -176,6 +189,15 @@ public class AutoBasket extends OpMode {
 
         FtcDashboard dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+
+        poseUpdater = new PoseUpdater(hardwareMap);
+
+        dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
+
+        poseUpdater.setStartingPose(startPose);
+
+        Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
+        Drawing.sendPacket();
     }
 
     @Override
