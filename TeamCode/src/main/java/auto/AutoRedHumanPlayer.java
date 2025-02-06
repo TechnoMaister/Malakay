@@ -56,31 +56,33 @@ public class AutoRedHumanPlayer extends OpMode {
 
     public Pose startPose = new Pose(135.2, 81.8, Math.toRadians(-180));
 
-    public Pose chamberPose1 = new Pose(107.8, 81.8, Math.toRadians(-180));
+    public Pose chamberPose1 = new Pose(106.8, 81.8, Math.toRadians(-180));
 
     public Pose backPose = new Pose(120, 81.8);
 
-    public Pose firstSamplePose = new Pose(84, 117);
+    public Pose firstSamplePose = new Pose(84, 114);
     public Pose firstSampleControlPose1 = new Pose(123, 129.7);
     public Pose firstSampleControlPose2 = new Pose(87.2, 92);
 
-    public Pose humanPose1 = new Pose(115, 121.2);
+    public Pose humanPose1 = new Pose(120, 121.2);
 
-    public Pose secondSamplePose = new Pose(84, 125);
+    public Pose secondSamplePose = new Pose(84, 122.2);
     public Pose secondSampleControlPose1 = new Pose(84, 119);
     public Pose secondSampleControlPose2 = new Pose(84, 119);
 
-    public Pose humanPose2 = new Pose(115, 132, Math.toRadians(-180));
+    public Pose humanPose2 = new Pose(120, 132, Math.toRadians(-180));
 
-    public Pose intakePose = new Pose(120, 121.2, Math.toRadians(0));
+    public Pose intakePose = new Pose(130, 122.3, Math.toRadians(0));
 
-    public Pose chamberPose2 = new Pose(104, 81.8, Math.toRadians(-180)); // 76
+    public Pose chamberPose2 = new Pose(110, 79, Math.toRadians(-180));
 
-    public Pose intakePose2 = new Pose(119, 125.3, Math.toRadians(0));
+    public Pose intakePose2 = new Pose(130, 122.3, Math.toRadians(0));
 
-    public Pose chamberPose3 = new Pose(100, 81.8, Math.toRadians(-180)); // 70.7
+    public Pose chamberPose3 = new Pose(112, 75, Math.toRadians(-180));
 
-    public Pose parkPose = new Pose(123, 123, Math.toRadians(0));
+    public Pose domain_expansion = new Pose(130, 79);
+
+    public Pose parkPose = new Pose(127, 127, Math.toRadians(0));
 
     public Path scorePreload, scoreFirstSpecimen, intake, scoreSecondSpecimen, park;
     public PathChain pushSamples;
@@ -116,7 +118,7 @@ public class AutoRedHumanPlayer extends OpMode {
         intake = new Path(new BezierCurve(new Point(chamberPose2), new Point(intakePose2)));
         intake.setLinearHeadingInterpolation(chamberPose2.getHeading(), intakePose2.getHeading());
 
-        scoreSecondSpecimen = new Path(new BezierCurve(new Point(intakePose2), new Point(chamberPose3)));
+        scoreSecondSpecimen = new Path(new BezierCurve(new Point(intakePose2), new Point(domain_expansion),new Point(chamberPose3)));
         scoreSecondSpecimen.setLinearHeadingInterpolation(intakePose2.getHeading(), chamberPose3.getHeading());
 
         park = new Path(new BezierLine(new Point(chamberPose3), new Point(parkPose)));
