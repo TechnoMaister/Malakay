@@ -56,7 +56,7 @@ public class AutoRedHumanPlayer extends OpMode {
 
     public Pose startPose = new Pose(135.2, 81.8, Math.toRadians(-180));
 
-    public Pose chamberPose1 = new Pose(106.8, 81.8, Math.toRadians(-180));
+    public Pose chamberPose1 = new Pose(108.4, 73, Math.toRadians(-180));
 
     public Pose backPose = new Pose(120, 81.8);
 
@@ -67,19 +67,19 @@ public class AutoRedHumanPlayer extends OpMode {
     public Pose humanPose1 = new Pose(120, 121.2);
 
     public Pose secondSamplePose = new Pose(84, 122.2);
-    public Pose secondSampleControlPose1 = new Pose(84, 119);
-    public Pose secondSampleControlPose2 = new Pose(84, 119);
+    public Pose secondSampleControlPose1 = new Pose(84, 110);
+    public Pose secondSampleControlPose2 = new Pose(84, 110);
 
-    public Pose humanPose2 = new Pose(120, 132, Math.toRadians(-180));
+    public Pose humanPose2 = new Pose(125, 132, Math.toRadians(-180));
 
-    public Pose intakePose = new Pose(130, 122.3, Math.toRadians(0));
+    public Pose intakePose = new Pose(131, 122.3, Math.toRadians(0));
 
-    public Pose chamberPose2 = new Pose(110, 79, Math.toRadians(-180));
+    public Pose chamberPose2 = new Pose(109, 73, Math.toRadians(-180));
+    public Pose infinite_void = new Pose(130, 73);
 
-    public Pose intakePose2 = new Pose(130, 122.3, Math.toRadians(0));
+    public Pose intakePose2 = new Pose(128, 122.3, Math.toRadians(0));
 
-    public Pose chamberPose3 = new Pose(112, 75, Math.toRadians(-180));
-
+    public Pose chamberPose3 = new Pose(111.5, 72, Math.toRadians(-180));
     public Pose domain_expansion = new Pose(130, 79);
 
     public Pose parkPose = new Pose(127, 127, Math.toRadians(0));
@@ -112,7 +112,7 @@ public class AutoRedHumanPlayer extends OpMode {
 
                 .build();
 
-        scoreFirstSpecimen = new Path(new BezierCurve(new Point(intakePose), new Point(chamberPose2)));
+        scoreFirstSpecimen = new Path(new BezierCurve(new Point(intakePose), new Point(infinite_void), new Point(chamberPose2)));
         scoreFirstSpecimen.setLinearHeadingInterpolation(intakePose.getHeading(), chamberPose2.getHeading());
 
         intake = new Path(new BezierCurve(new Point(chamberPose2), new Point(intakePose2)));
@@ -157,8 +157,8 @@ public class AutoRedHumanPlayer extends OpMode {
                 break;
             case 2:
                 if(!follower.isBusy()) {
-                    claw(CLAW_CLOSED);
-                    if(pathTimer.getElapsedTime() >= openClaw) {
+                    if(pathTimer.getElapsedTime() >= openClaw) claw(CLAW_CLOSED);
+                    if(pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
                         follower.followPath(scoreFirstSpecimen, true);
                         setPathState(3);
                     }
@@ -175,8 +175,8 @@ public class AutoRedHumanPlayer extends OpMode {
                 break;
             case 4:
                 if(!follower.isBusy()) {
-                    claw(CLAW_CLOSED);
-                    if(pathTimer.getElapsedTime() >= openClaw + 600) {
+                    if(pathTimer.getElapsedTime() >= openClaw+200) claw(CLAW_CLOSED);
+                    if(pathTimer.getElapsedTime() >= openClaw + scoreDelay) {
                         follower.followPath(scoreSecondSpecimen, true);
 
                         setPathState(5);
@@ -211,7 +211,7 @@ public class AutoRedHumanPlayer extends OpMode {
         }
 
         if((pathState == 3 || pathState == 5) && pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
-            liftTargetPos = HIGH_CHAMBER;
+            liftTargetPos = HIGH_CHAMBER+125;
             extend(MEXT);
             clawWrist(CLAW_UP_CHAMBER);
         }

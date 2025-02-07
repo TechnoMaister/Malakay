@@ -40,7 +40,7 @@ import util.Hardware;
 
 @Config
 @Autonomous(group = "Auto")
-public class DUMNEZEU extends OpMode {
+public class AutoBlueHumanPlayer extends OpMode {
 
     public PoseUpdater poseUpdater;
     public DashboardPoseTracker dashboardPoseTracker;
@@ -54,33 +54,35 @@ public class DUMNEZEU extends OpMode {
     public PIDFController liftController;
     public int pathState;
 
-    public Pose startPose = new Pose(135.2, 81.8, Math.toRadians(-180));
+    public Pose startPose = new Pose(-135.2, -81.8, Math.toRadians(0));
 
-    public Pose backPose = new Pose(120, 81.8);
+    public Pose chamberPose1 = new Pose(-108.4, -73, Math.toRadians(0));
 
-    public Pose chamberPose1 = new Pose(108, 81.8, Math.toRadians(-180));
+    public Pose backPose = new Pose(-120, -81.8);
 
-    public Pose firstSamplePose = new Pose(79, 115);
-    public Pose firstSampleControlPose1 = new Pose(125.3, 129.7);
-    public Pose firstSampleControlPose2 = new Pose(78.7, 92);
+    public Pose firstSamplePose = new Pose(-84, -114);
+    public Pose firstSampleControlPose1 = new Pose(-123, -129.7);
+    public Pose firstSampleControlPose2 = new Pose(-87.2, -92);
 
-    public Pose humanPose1 = new Pose(110, 120);
+    public Pose humanPose1 = new Pose(-120, -121.2);
 
-    public Pose secondSamplePose = new Pose(122.2, 120);
-    public Pose secondSampleControlPose1 = new Pose(42.6, 98);
-    public Pose secondSampleControlPose2 = new Pose(50.3, 136.4);
+    public Pose secondSamplePose = new Pose(-84, -122.2);
+    public Pose secondSampleControlPose1 = new Pose(-84, -110);
+    public Pose secondSampleControlPose2 = new Pose(-84, -110);
 
-    public Pose humanPose2 = new Pose(115, 132, Math.toRadians(-180));
+    public Pose humanPose2 = new Pose(-125, -132, Math.toRadians(0));
 
-    public Pose intakePose = new Pose(120, 121.2, Math.toRadians(0));
+    public Pose intakePose = new Pose(-133.2, -122.3, Math.toRadians(180));
 
-    public Pose chamberPose2 = new Pose(104, 81.8, Math.toRadians(-180)); // 76
+    public Pose chamberPose2 = new Pose(-109, -73, Math.toRadians(0));
+    public Pose infinite_void = new Pose(-130, -73);
 
-    public Pose intakePose2 = new Pose(119, 125.3, Math.toRadians(0));
+    public Pose intakePose2 = new Pose(-130, -122.3, Math.toRadians(180));
 
-    public Pose chamberPose3 = new Pose(100, 81.8, Math.toRadians(-180)); // 70.7
+    public Pose chamberPose3 = new Pose(-111, -75, Math.toRadians(0));
+    public Pose domain_expansion = new Pose(-130, -79);
 
-    public Pose parkPose = new Pose(123, 123, Math.toRadians(0));
+    public Pose parkPose = new Pose(-127, -127, Math.toRadians(180));
 
     public Path scorePreload, scoreFirstSpecimen, intake, scoreSecondSpecimen, park;
     public PathChain pushSamples;
@@ -94,7 +96,7 @@ public class DUMNEZEU extends OpMode {
                 .setConstantHeadingInterpolation(startPose.getHeading())
 
                 .addPath(new BezierCurve(new Point(backPose), new Point(firstSampleControlPose1), new Point(firstSampleControlPose2), new Point(firstSamplePose)))
-                .setConstantHeadingInterpolation(chamberPose1.getHeading())
+                .setConstantHeadingInterpolation(startPose.getHeading())
 
                 .addPath(new BezierLine(new Point(firstSamplePose), new Point(humanPose1)))
                 .setConstantHeadingInterpolation(startPose.getHeading())
@@ -102,21 +104,21 @@ public class DUMNEZEU extends OpMode {
                 .addPath(new BezierCurve(new Point(humanPose1), new Point(secondSampleControlPose1), new Point(secondSampleControlPose2), new Point(secondSamplePose)))
                 .setConstantHeadingInterpolation(startPose.getHeading())
 
-                /*.addPath(new BezierLine(new Point(secondSamplePose), new Point(humanPose2)))
+                .addPath(new BezierLine(new Point(secondSamplePose), new Point(humanPose2)))
                 .setConstantHeadingInterpolation(startPose.getHeading())
 
                 .addPath(new BezierLine(new Point(humanPose2), new Point(intakePose)))
-                .setLinearHeadingInterpolation(humanPose2.getHeading(), intakePose.getHeading())*/
+                .setLinearHeadingInterpolation(humanPose2.getHeading(), intakePose.getHeading())
 
                 .build();
 
-        scoreFirstSpecimen = new Path(new BezierCurve(new Point(intakePose), new Point(chamberPose2)));
+        scoreFirstSpecimen = new Path(new BezierCurve(new Point(intakePose), new Point(infinite_void), new Point(chamberPose2)));
         scoreFirstSpecimen.setLinearHeadingInterpolation(intakePose.getHeading(), chamberPose2.getHeading());
 
         intake = new Path(new BezierCurve(new Point(chamberPose2), new Point(intakePose2)));
         intake.setLinearHeadingInterpolation(chamberPose2.getHeading(), intakePose2.getHeading());
 
-        scoreSecondSpecimen = new Path(new BezierCurve(new Point(intakePose2), new Point(chamberPose3)));
+        scoreSecondSpecimen = new Path(new BezierCurve(new Point(intakePose2), new Point(domain_expansion),new Point(chamberPose3)));
         scoreSecondSpecimen.setLinearHeadingInterpolation(intakePose2.getHeading(), chamberPose3.getHeading());
 
         park = new Path(new BezierLine(new Point(chamberPose3), new Point(parkPose)));
@@ -149,14 +151,14 @@ public class DUMNEZEU extends OpMode {
                     claw(CLAW_OPEN);
                     if(pathTimer.getElapsedTime() >= openClaw) {
                         follower.followPath(pushSamples, true);
-                        setPathState(-1);
+                        setPathState(2);
                     }
                 }
                 break;
             case 2:
                 if(!follower.isBusy()) {
                     claw(CLAW_CLOSED);
-                    if(pathTimer.getElapsedTime() >= openClaw) {
+                    if(pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
                         follower.followPath(scoreFirstSpecimen, true);
                         setPathState(3);
                     }
@@ -174,7 +176,7 @@ public class DUMNEZEU extends OpMode {
             case 4:
                 if(!follower.isBusy()) {
                     claw(CLAW_CLOSED);
-                    if(pathTimer.getElapsedTime() >= openClaw + 600) {
+                    if(pathTimer.getElapsedTime() >= openClaw + scoreDelay) {
                         follower.followPath(scoreSecondSpecimen, true);
 
                         setPathState(5);

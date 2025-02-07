@@ -7,15 +7,15 @@ public class RobotConstants {
 
     public static double
 
-    CLAW_ROT_OR = 1,
+    CLAW_ROT_OR = .49,
 
-    CLAW_ROT_VR = .7,
+    CLAW_ROT_VR = .82,
 
-    CLAW_ROT_45 = .8,
+    CLAW_ROT_45 = .7,
 
-    CLAW_OPEN = .45,
+    CLAW_OPEN = .4,
 
-    CLAW_CLOSED = .8,
+    CLAW_CLOSED = .67,
 
     CLAW_UP_BASKET = .45,
 
@@ -33,15 +33,15 @@ public class RobotConstants {
 
     HIGH_CHAMBER = 1600,
 
-    HANG = 1300,
+    HANG = 2500,
 
     INTAKE = 550,
 
-    DOWN = 0,
+    DOWN = 200,
 
-    EXT = 4000,
+    EXT = 4500,
 
-    MEXT = 2000,
+    MEXT = 2550,
 
     UNEXT = 0;
 

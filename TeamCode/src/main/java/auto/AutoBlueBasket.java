@@ -36,7 +36,7 @@ import util.Hardware;
 
 @Config
 @Autonomous(group = "Auto")
-public class AutoRedBasket extends OpMode {
+public class AutoBlueBasket extends OpMode {
 
     public PoseUpdater poseUpdater;
     public DashboardPoseTracker dashboardPoseTracker;
@@ -50,19 +50,19 @@ public class AutoRedBasket extends OpMode {
     public PIDFController liftController;
     public int pathState;
 
-    public Pose startPose = new Pose(135.5, 39, Math.toRadians(-90));
+    public Pose startPose = new Pose(-135.5, -39, Math.toRadians(-270));
 
-    public Pose basketPose1 = new Pose(135.5, 20, Math.toRadians(-90));
+    public Pose basketPose1 = new Pose(-135.5, -20, Math.toRadians(-270));
 
-    public Pose firstSamplePose = new Pose(116.3, 24, Math.toRadians(-180));
+    public Pose firstSamplePose = new Pose(-116.3, -24, Math.toRadians(0));
 
-    public Pose basketPose2 = new Pose(127, 13.5, Math.toRadians(-45));
+    public Pose basketPose2 = new Pose(-127, -13.5, Math.toRadians(-315));
 
-    public Pose secondSamplePose = new Pose(116.3, 12.5, Math.toRadians(-180));
+    public Pose secondSamplePose = new Pose(-116.3, -12.5, Math.toRadians(0));
 
-    public Pose thirdSamplePose = new Pose(99.8, 21, Math.toRadians(-90));
+    public Pose thirdSamplePose = new Pose(-99.8, -21, Math.toRadians(-270));
 
-    public Pose parkPose = new Pose(79.7, 43, Math.toRadians(90));
+    public Pose parkPose = new Pose(-79.7, -43, Math.toRadians(270));
 
     public Path scorePreload, getFirstSample, scoreFirstSample, getSecondSample, scoreSecondSample, getThirdSample, scoreThirdSample, park;
 
