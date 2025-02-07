@@ -149,6 +149,7 @@ public class AutoRedHumanPlayer extends OpMode {
 
                 if(!follower.isBusy()) {
                     claw(CLAW_OPEN);
+                    clawWrist(CLAW_MID);
                     if(pathTimer.getElapsedTime() >= openClaw) {
                         follower.followPath(pushSamples, true);
                         setPathState(2);
@@ -211,7 +212,7 @@ public class AutoRedHumanPlayer extends OpMode {
         }
 
         if((pathState == 3 || pathState == 5) && pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
-            liftTargetPos = HIGH_CHAMBER+125;
+            liftTargetPos = HIGH_CHAMBER;
             extend(MEXT);
             clawWrist(CLAW_UP_CHAMBER);
         }
@@ -253,6 +254,8 @@ public class AutoRedHumanPlayer extends OpMode {
 
         robot = new Hardware(hardwareMap);
         encoder = new Encoder();
+
+        robot.lift.stopAndResetEncoder();
 
         liftController = new PIDFController(p, i, d, f);
 

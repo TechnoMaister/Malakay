@@ -254,6 +254,8 @@ public class AutoBlueHumanPlayer extends OpMode {
         robot = new Hardware(hardwareMap);
         encoder = new Encoder();
 
+        robot.lift.stopAndResetEncoder();
+
         liftController = new PIDFController(p, i, d, f);
 
         FtcDashboard dashboard = FtcDashboard.getInstance();

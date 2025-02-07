@@ -69,8 +69,6 @@ public class Hardware {
 
         lift.setRunMode(Motor.RunMode.VelocityControl);
 
-        lift.stopAndResetEncoder();
-
         extend = robot.get(DcMotor.class, "extend");
 
         extend.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
