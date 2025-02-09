@@ -56,7 +56,7 @@ public class AutoBlueHumanPlayer extends OpMode {
 
     public Pose startPose = new Pose(-135.2, -81.8, Math.toRadians(0));
 
-    public Pose chamberPose1 = new Pose(-108.4, -73, Math.toRadians(0));
+    public Pose chamberPose1 = new Pose(-108, -73, Math.toRadians(0));
 
     public Pose backPose = new Pose(-120, -81.8);
 
@@ -72,14 +72,14 @@ public class AutoBlueHumanPlayer extends OpMode {
 
     public Pose humanPose2 = new Pose(-125, -132, Math.toRadians(0));
 
-    public Pose intakePose = new Pose(-133.2, -122.3, Math.toRadians(180));
+    public Pose intakePose = new Pose(-131, -122.3, Math.toRadians(180));
 
     public Pose chamberPose2 = new Pose(-109, -73, Math.toRadians(0));
     public Pose infinite_void = new Pose(-130, -73);
 
-    public Pose intakePose2 = new Pose(-130, -122.3, Math.toRadians(180));
+    public Pose intakePose2 = new Pose(-128, -122.3, Math.toRadians(180));
 
-    public Pose chamberPose3 = new Pose(-111, -75, Math.toRadians(0));
+    public Pose chamberPose3 = new Pose(-111, -72, Math.toRadians(0));
     public Pose domain_expansion = new Pose(-130, -79);
 
     public Pose parkPose = new Pose(-127, -127, Math.toRadians(180));
@@ -121,8 +121,8 @@ public class AutoBlueHumanPlayer extends OpMode {
         scoreSecondSpecimen = new Path(new BezierCurve(new Point(intakePose2), new Point(domain_expansion),new Point(chamberPose3)));
         scoreSecondSpecimen.setLinearHeadingInterpolation(intakePose2.getHeading(), chamberPose3.getHeading());
 
-        park = new Path(new BezierLine(new Point(chamberPose3), new Point(parkPose)));
-        park.setLinearHeadingInterpolation(chamberPose3.getHeading(), parkPose.getHeading());
+        park = new Path(new BezierLine(new Point(chamberPose3), new Point(backPose)));
+        park.setConstantHeadingInterpolation(0);
     }
 
     public void autonomousPathUpdate() {
@@ -131,8 +131,9 @@ public class AutoBlueHumanPlayer extends OpMode {
                 claw(CLAW_CLOSED);
                 clawRotation(CLAW_ROT_VR);
                 clawWrist(CLAW_UP_CHAMBER);
+
                 extend(MEXT);
-                liftTargetPos = HIGH_CHAMBER;
+                liftTargetPos = HIGH_CHAMBER+125;
 
                 if(pathTimer.getElapsedTime() >= startDelay) {
                     follower.followPath(scorePreload, true);
@@ -149,6 +150,7 @@ public class AutoBlueHumanPlayer extends OpMode {
 
                 if(!follower.isBusy()) {
                     claw(CLAW_OPEN);
+                    clawWrist(CLAW_MID);
                     if(pathTimer.getElapsedTime() >= openClaw) {
                         follower.followPath(pushSamples, true);
                         setPathState(2);
@@ -157,8 +159,8 @@ public class AutoBlueHumanPlayer extends OpMode {
                 break;
             case 2:
                 if(!follower.isBusy()) {
-                    claw(CLAW_CLOSED);
-                    if(pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
+                    if(pathTimer.getElapsedTime() >= openClaw) claw(CLAW_CLOSED);
+                    if(pathTimer.getElapsedTime() >= openClaw+scoreDelay+200) {
                         follower.followPath(scoreFirstSpecimen, true);
                         setPathState(3);
                     }
@@ -167,6 +169,7 @@ public class AutoBlueHumanPlayer extends OpMode {
             case 3:
                 if(!follower.isBusy()) {
                     claw(CLAW_OPEN);
+                    clawWrist(CLAW_MID);
                     if(pathTimer.getElapsedTime() >= openClaw) {
                         follower.followPath(intake, true);
                         setPathState(4);
@@ -175,7 +178,7 @@ public class AutoBlueHumanPlayer extends OpMode {
                 break;
             case 4:
                 if(!follower.isBusy()) {
-                    claw(CLAW_CLOSED);
+                    if(pathTimer.getElapsedTime() >= openClaw+200) claw(CLAW_CLOSED);
                     if(pathTimer.getElapsedTime() >= openClaw + scoreDelay) {
                         follower.followPath(scoreSecondSpecimen, true);
 
@@ -185,8 +188,12 @@ public class AutoBlueHumanPlayer extends OpMode {
                 break;
             case 5:
                 if(!follower.isBusy()) {
-                    follower.followPath(park, true);
-                    setPathState(-1);
+                    claw(CLAW_OPEN);
+                    clawWrist(CLAW_MID);
+                    if(pathTimer.getElapsedTime() >= openClaw) {
+                        follower.followPath(park, true);
+                        setPathState(-1);
+                    }
                 }
                 break;
         }
@@ -206,13 +213,13 @@ public class AutoBlueHumanPlayer extends OpMode {
 
         if((pathState == 2 || pathState == 4) && pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
             liftTargetPos = INTAKE;
-            clawWrist(CLAW_MID);
             extend(UNEXT);
         }
 
         if((pathState == 3 || pathState == 5) && pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
-            liftTargetPos = HIGH_CHAMBER;
-            extend(MEXT);
+            if(pathState == 3) liftTargetPos = HIGH_CHAMBER+75;
+            else liftTargetPos = HIGH_CHAMBER+75;
+            if(pathTimer.getElapsedTime() >= openClaw+scoreDelay+200) extend(MEXT);
             clawWrist(CLAW_UP_CHAMBER);
         }
 
@@ -220,10 +227,7 @@ public class AutoBlueHumanPlayer extends OpMode {
             if(pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
                 liftTargetPos = 0;
                 extend(UNEXT);
-                claw(CLAW_CLOSED);
-                clawWrist(CLAW_UP_CHAMBER);
-                claw(CLAW_CLOSED);
-            } else claw(CLAW_OPEN);
+            }
         }
 
         telemetry.addData("path state", pathState);

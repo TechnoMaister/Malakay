@@ -125,6 +125,7 @@ public class Drive extends OpMode {
         pidf = liftController.calculate(liftPos, liftTargetPos);
 
         robot.lift.set(pidf);
+
         encoder.runTo(robot.extend, extTargetPos);
         robot.clawWrist.setPosition(clawWristPos);
         robot.claw.setPosition(clawPos);

@@ -13,7 +13,7 @@ public class LiftVelocityPIDF extends OpMode {
 
     private PIDFController liftController;
 
-    public static double p = 0.003, i = 0.003, d = 0, f = 0.00006;
+    public static double p = 0.003, i = 0.003, d = 0, f = 0.0001;
 
     public static int target = 0;
 

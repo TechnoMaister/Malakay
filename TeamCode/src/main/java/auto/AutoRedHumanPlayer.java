@@ -56,7 +56,7 @@ public class AutoRedHumanPlayer extends OpMode {
 
     public Pose startPose = new Pose(135.2, 81.8, Math.toRadians(-180));
 
-    public Pose chamberPose1 = new Pose(108.4, 73, Math.toRadians(-180));
+    public Pose chamberPose1 = new Pose(108, 73, Math.toRadians(-180));
 
     public Pose backPose = new Pose(120, 81.8);
 
@@ -79,7 +79,7 @@ public class AutoRedHumanPlayer extends OpMode {
 
     public Pose intakePose2 = new Pose(128, 122.3, Math.toRadians(0));
 
-    public Pose chamberPose3 = new Pose(111.5, 72, Math.toRadians(-180));
+    public Pose chamberPose3 = new Pose(111, 72, Math.toRadians(-180));
     public Pose domain_expansion = new Pose(130, 79);
 
     public Pose parkPose = new Pose(127, 127, Math.toRadians(0));
@@ -121,8 +121,8 @@ public class AutoRedHumanPlayer extends OpMode {
         scoreSecondSpecimen = new Path(new BezierCurve(new Point(intakePose2), new Point(domain_expansion),new Point(chamberPose3)));
         scoreSecondSpecimen.setLinearHeadingInterpolation(intakePose2.getHeading(), chamberPose3.getHeading());
 
-        park = new Path(new BezierLine(new Point(chamberPose3), new Point(parkPose)));
-        park.setLinearHeadingInterpolation(chamberPose3.getHeading(), parkPose.getHeading());
+        park = new Path(new BezierLine(new Point(chamberPose3), new Point(backPose)));
+        park.setConstantHeadingInterpolation(-180);
     }
 
     public void autonomousPathUpdate() {
@@ -131,8 +131,9 @@ public class AutoRedHumanPlayer extends OpMode {
                 claw(CLAW_CLOSED);
                 clawRotation(CLAW_ROT_VR);
                 clawWrist(CLAW_UP_CHAMBER);
+
                 extend(MEXT);
-                liftTargetPos = HIGH_CHAMBER;
+                liftTargetPos = HIGH_CHAMBER+125;
 
                 if(pathTimer.getElapsedTime() >= startDelay) {
                     follower.followPath(scorePreload, true);
@@ -159,7 +160,7 @@ public class AutoRedHumanPlayer extends OpMode {
             case 2:
                 if(!follower.isBusy()) {
                     if(pathTimer.getElapsedTime() >= openClaw) claw(CLAW_CLOSED);
-                    if(pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
+                    if(pathTimer.getElapsedTime() >= openClaw+scoreDelay+200) {
                         follower.followPath(scoreFirstSpecimen, true);
                         setPathState(3);
                     }
@@ -168,6 +169,7 @@ public class AutoRedHumanPlayer extends OpMode {
             case 3:
                 if(!follower.isBusy()) {
                     claw(CLAW_OPEN);
+                    clawWrist(CLAW_MID);
                     if(pathTimer.getElapsedTime() >= openClaw) {
                         follower.followPath(intake, true);
                         setPathState(4);
@@ -186,8 +188,12 @@ public class AutoRedHumanPlayer extends OpMode {
                 break;
             case 5:
                 if(!follower.isBusy()) {
-                    follower.followPath(park, true);
-                    setPathState(-1);
+                    claw(CLAW_OPEN);
+                    clawWrist(CLAW_MID);
+                    if(pathTimer.getElapsedTime() >= openClaw) {
+                        follower.followPath(park, true);
+                        setPathState(-1);
+                    }
                 }
                 break;
         }
@@ -207,13 +213,13 @@ public class AutoRedHumanPlayer extends OpMode {
 
         if((pathState == 2 || pathState == 4) && pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
             liftTargetPos = INTAKE;
-            clawWrist(CLAW_MID);
             extend(UNEXT);
         }
 
         if((pathState == 3 || pathState == 5) && pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
-            liftTargetPos = HIGH_CHAMBER;
-            extend(MEXT);
+            if(pathState == 3) liftTargetPos = HIGH_CHAMBER+75;
+            else liftTargetPos = HIGH_CHAMBER+75;
+            if(pathTimer.getElapsedTime() >= openClaw+scoreDelay+200) extend(MEXT);
             clawWrist(CLAW_UP_CHAMBER);
         }
 
@@ -221,10 +227,7 @@ public class AutoRedHumanPlayer extends OpMode {
             if(pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
                 liftTargetPos = 0;
                 extend(UNEXT);
-                claw(CLAW_CLOSED);
-                clawWrist(CLAW_UP_CHAMBER);
-                claw(CLAW_CLOSED);
-            } else claw(CLAW_OPEN);
+            }
         }
 
         telemetry.addData("path state", pathState);
