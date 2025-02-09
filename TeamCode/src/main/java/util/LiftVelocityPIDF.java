@@ -1,10 +1,9 @@
 package util;
 
-import static util.RobotConstants.liftPIDFCoefficients;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.pedropathing.util.CustomPIDFCoefficients;
 import com.pedropathing.util.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -15,6 +14,14 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 public class LiftVelocityPIDF extends OpMode {
 
     public PIDFController controller;
+    public static CustomPIDFCoefficients
+
+            liftPIDFCoefficients = new CustomPIDFCoefficients(
+            0.003,
+            0.003,
+            0,
+            0.0001
+    );
     public static int target = 0;
     int liftPos;
     double power;

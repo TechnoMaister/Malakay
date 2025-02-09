@@ -1,5 +1,6 @@
 package auto;
 
+import static util.LiftVelocityPIDF.liftPIDFCoefficients;
 import static util.RobotConstants.CLAW_CLOSED;
 import static util.RobotConstants.CLAW_DOWN;
 import static util.RobotConstants.CLAW_OPEN;
@@ -7,7 +8,6 @@ import static util.RobotConstants.CLAW_UP_BASKET;
 import static util.RobotConstants.DOWN;
 import static util.RobotConstants.LOW_BASKET;
 import static util.RobotConstants.MEXT;
-import static util.RobotConstants.liftPIDFCoefficients;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
