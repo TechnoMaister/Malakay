@@ -1,9 +1,5 @@
 package auto;
 
-import static util.LiftVelocityPIDF.p;
-import static util.LiftVelocityPIDF.i;
-import static util.LiftVelocityPIDF.d;
-import static util.LiftVelocityPIDF.f;
 import static util.RobotConstants.CLAW_CLOSED;
 import static util.RobotConstants.CLAW_MID;
 import static util.RobotConstants.CLAW_OPEN;
@@ -13,11 +9,11 @@ import static util.RobotConstants.HIGH_CHAMBER;
 import static util.RobotConstants.INTAKE;
 import static util.RobotConstants.MEXT;
 import static util.RobotConstants.UNEXT;
+import static util.RobotConstants.liftPIDFCoefficients;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.arcrobotics.ftclib.controller.PIDFController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
 import com.pedropathing.localization.PoseUpdater;
@@ -29,6 +25,7 @@ import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
 import com.pedropathing.util.DashboardPoseTracker;
 import com.pedropathing.util.Drawing;
+import com.pedropathing.util.PIDFController;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -43,15 +40,14 @@ import util.Hardware;
 public class AutoBlueHumanPlayer extends OpMode {
 
     public PoseUpdater poseUpdater;
+    public PIDFController controller;
     public DashboardPoseTracker dashboardPoseTracker;
     public Follower follower;
     public Timer pathTimer, opmodeTimer;
-    public double pidf;
     public static double startDelay = 800, scoreDelay = 600, openClaw = 400;
-    public int liftPos, liftTargetPos;
+    public int liftTargetPos;
     public Hardware robot;
     public Encoder encoder;
-    public PIDFController liftController;
     public int pathState;
 
     public Pose startPose = new Pose(-135.2, -81.8, Math.toRadians(0));
@@ -133,7 +129,7 @@ public class AutoBlueHumanPlayer extends OpMode {
                 clawWrist(CLAW_UP_CHAMBER);
 
                 extend(MEXT);
-                liftTargetPos = HIGH_CHAMBER+125;
+                setLiftTargetPosition(HIGH_CHAMBER+125);
 
                 if(pathTimer.getElapsedTime() >= startDelay) {
                     follower.followPath(scorePreload, true);
@@ -209,23 +205,20 @@ public class AutoBlueHumanPlayer extends OpMode {
         follower.update();
         autonomousPathUpdate();
 
-        lift();
-
         if((pathState == 2 || pathState == 4) && pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
-            liftTargetPos = INTAKE;
+            setLiftTargetPosition(INTAKE);
             extend(UNEXT);
         }
 
         if((pathState == 3 || pathState == 5) && pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
-            if(pathState == 3) liftTargetPos = HIGH_CHAMBER+75;
-            else liftTargetPos = HIGH_CHAMBER+75;
+            setLiftTargetPosition(HIGH_CHAMBER+75);
             if(pathTimer.getElapsedTime() >= openClaw+scoreDelay+200) extend(MEXT);
             clawWrist(CLAW_UP_CHAMBER);
         }
 
         if(pathState == -1) {
             if(pathTimer.getElapsedTime() >= openClaw+scoreDelay) {
-                liftTargetPos = 0;
+                setLiftTargetPosition(0);
                 extend(UNEXT);
             }
         }
@@ -250,6 +243,8 @@ public class AutoBlueHumanPlayer extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
+        controller = new PIDFController(liftPIDFCoefficients);
+
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
@@ -257,10 +252,6 @@ public class AutoBlueHumanPlayer extends OpMode {
 
         robot = new Hardware(hardwareMap);
         encoder = new Encoder();
-
-        robot.lift.stopAndResetEncoder();
-
-        liftController = new PIDFController(p, i, d, f);
 
         FtcDashboard dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
@@ -281,11 +272,17 @@ public class AutoBlueHumanPlayer extends OpMode {
         setPathState(0);
     }
 
-    public void lift() {
-        liftController.setPIDF(p, i, d, f);
-        liftPos = robot.leftLift.getCurrentPosition();
-        pidf = liftController.calculate(liftPos, liftTargetPos);
-        robot.lift.set(pidf);
+    public void updateLift() {
+        controller.updateError(liftTargetPos - robot.leftLift.getCurrentPosition());
+        double liftPower = controller.runPIDF();
+        robot.leftLift.setPower(liftPower);
+        robot.rightLift.setPower(liftPower);
+    }
+
+    public void setLiftTargetPosition(int position) {
+        liftTargetPos = position;
+        controller.reset();
+        updateLift();
     }
 
     public void extend(int position) {

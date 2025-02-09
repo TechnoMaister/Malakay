@@ -1,9 +1,5 @@
 package teleOp;
 
-import static util.LiftVelocityPIDF.p;
-import static util.LiftVelocityPIDF.i;
-import static util.LiftVelocityPIDF.d;
-import static util.LiftVelocityPIDF.f;
 import static util.RobotConstants.CLAW_CLOSED;
 import static util.RobotConstants.CLAW_DOWN;
 import static util.RobotConstants.CLAW_MID;
@@ -22,12 +18,13 @@ import static util.RobotConstants.INTAKE;
 import static util.RobotConstants.LOW_BASKET;
 import static util.RobotConstants.MEXT;
 import static util.RobotConstants.UNEXT;
+import static util.RobotConstants.liftPIDFCoefficients;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.arcrobotics.ftclib.controller.PIDFController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
 import com.pedropathing.util.Constants;
+import com.pedropathing.util.PIDFController;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -43,15 +40,15 @@ import util.Hardware;
 public class Drive extends OpMode {
 
     public Follower follower;
+    public PIDFController controller;
     public Pose startPose = new Pose(0,0,0);
     public Hardware robot;
     public Encoder encoder;
-    public PIDFController liftController;
     public Timer intakeTime, extSubT, submersibleTime, basket, timer;
     public Gamepad previousGamepad1, currentGamepad1;
     public boolean L1, CROSS, CIRCLE, TRIANGLE;
-    public double pidf, clawWristPos, clawPos, clawRotPos;
-    public int liftPos, liftTargetPos, extTargetPos, clawRot;
+    public double clawWristPos, clawPos, clawRotPos;
+    public int liftTargetPos, extTargetPos, clawRot;
     public static double
 
     intakeTimeV = 500,
@@ -74,10 +71,10 @@ public class Drive extends OpMode {
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
 
+        controller = new PIDFController(liftPIDFCoefficients);
+
         robot = new Hardware(hardwareMap);
         encoder = new Encoder();
-
-        liftController = new PIDFController(p, i, d, f);
 
         previousGamepad1 = new Gamepad();
         currentGamepad1 = new Gamepad();
@@ -119,12 +116,6 @@ public class Drive extends OpMode {
                 break;
             }
         }
-
-        liftController.setPIDF(p, i, d, f);
-        liftPos = robot.leftLift.getCurrentPosition();
-        pidf = liftController.calculate(liftPos, liftTargetPos);
-
-        robot.lift.set(pidf);
 
         encoder.runTo(robot.extend, extTargetPos);
         robot.clawWrist.setPosition(clawWristPos);
@@ -188,7 +179,7 @@ public class Drive extends OpMode {
         extTargetPos = UNEXT;
         clawPos = CLAW_OPEN;
         if(timer.getElapsedTime() >= timerV) {
-            liftTargetPos = INTAKE;
+            setLiftTargetPosition(INTAKE);
             clawWristPos = CLAW_MID;
         }
     }
@@ -197,14 +188,14 @@ public class Drive extends OpMode {
         clawRot = 0;
         clawPos = CLAW_CLOSED;
         if(intakeTime.getElapsedTime() >= intakeTimeV) {
-            liftTargetPos = HIGH_CHAMBER;
+            setLiftTargetPosition(HIGH_CHAMBER);
             clawWristPos = CLAW_UP_CHAMBER;
             if(intakeTime.getElapsedTime() >= intakeExt) extTargetPos = MEXT;
         } else extTargetPos = UNEXT;
     }
 
     public void idleSubmersible() {
-        liftTargetPos = DOWN;
+        setLiftTargetPosition(DOWN);
         if(submersibleTime.getElapsedTime() >= submersibleTimeV)
             if(submersibleTime.getElapsedTime() >= submersibleTimeV2) {
                 extTargetPos = UNEXT;
@@ -216,7 +207,7 @@ public class Drive extends OpMode {
     }
 
     public void intakeSubmersible() {
-        liftTargetPos = DOWN;
+        setLiftTargetPosition(DOWN);
         if(extSubT.getElapsedTime() >= extSubTV) clawWristPos = CLAW_DOWN;
         else {
             extTargetPos = EXT;
@@ -226,7 +217,7 @@ public class Drive extends OpMode {
     }
 
     public void scoreBasket() {
-        liftTargetPos = LOW_BASKET;
+        setLiftTargetPosition(LOW_BASKET);
         extTargetPos = MEXT;
         clawWristPos = CLAW_UP_BASKET;
         clawRot = 2;
@@ -234,7 +225,7 @@ public class Drive extends OpMode {
     }
 
     public void hangIdle() {
-        liftTargetPos = 0;
+        setLiftTargetPosition(0);
         extTargetPos = UNEXT;
         clawWristPos = CLAW_MID;
         clawRot = 0;
@@ -242,10 +233,23 @@ public class Drive extends OpMode {
     }
 
     public void hang() {
-        liftTargetPos = HANG;
+        setLiftTargetPosition(HANG);
         extTargetPos = UNEXT;
         clawWristPos = CLAW_MID;
         clawRot = 0;
         clawPos = CLAW_OPEN;
+    }
+
+    public void updateLift() {
+        controller.updateError(liftTargetPos - robot.leftLift.getCurrentPosition());
+        double liftPower = controller.runPIDF();
+        robot.leftLift.setPower(liftPower);
+        robot.rightLift.setPower(liftPower);
+    }
+
+    public void setLiftTargetPosition(int position) {
+        liftTargetPos = position;
+        controller.reset();
+        updateLift();
     }
 }

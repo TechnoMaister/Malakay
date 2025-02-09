@@ -9,8 +9,6 @@ import static com.pedropathing.follower.FollowerConstants.rightFrontMotorName;
 import static com.pedropathing.follower.FollowerConstants.rightRearMotorDirection;
 import static com.pedropathing.follower.FollowerConstants.rightRearMotorName;
 
-import com.arcrobotics.ftclib.hardware.motors.Motor;
-import com.arcrobotics.ftclib.hardware.motors.MotorGroup;
 import com.pedropathing.util.Constants;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -26,12 +24,9 @@ import pedroPathing.constants.LConstants;
 
 public class Hardware {
 
-    public Motor leftLift, rightLift;
-    public DcMotor extend;
-    public DcMotorEx leftFront, leftRear, rightFront, rightRear;
-    public List<DcMotorEx> motors;
+    public DcMotorEx leftFront, leftRear, rightFront, rightRear, leftLift, rightLift, extend;
+    public List<DcMotorEx> motors, lift;
     public Servo clawWrist, clawRotation, claw;
-    public MotorGroup lift;
 
     public Hardware(HardwareMap robot) {
         Constants.setConstants(FConstants.class, LConstants.class);
@@ -55,23 +50,25 @@ public class Hardware {
         }
 
         for (DcMotorEx motor : motors) {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         }
 
-        leftLift = new Motor(robot, "leftLift");
-        rightLift = new Motor(robot, "rightLift");
+        leftLift = robot.get(DcMotorEx.class, "leftLift");
+        rightLift = robot.get(DcMotorEx.class, "rightLift");
 
-        rightLift.setInverted(true);
+        rightLift.setDirection(DcMotorEx.Direction.REVERSE);
+        leftLift.setDirection(DcMotorEx.Direction.FORWARD);
 
-        lift = new MotorGroup(leftLift, rightLift);
+        lift = Arrays.asList(leftLift, rightLift);
 
-        lift.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        for (DcMotorEx motor : lift) {
+            motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
 
-        lift.setRunMode(Motor.RunMode.VelocityControl);
+        extend = robot.get(DcMotorEx.class, "extend");
 
-        extend = robot.get(DcMotor.class, "extend");
-
-        extend.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        extend.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         clawWrist = robot.get(Servo.class, "clawWrist");
         clawRotation = robot.get(Servo.class, "clawRotation");

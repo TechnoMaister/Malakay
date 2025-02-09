@@ -1,6 +1,7 @@
 package util;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.pedropathing.util.CustomPIDFCoefficients;
 
 @Config
 public class RobotConstants {
@@ -44,5 +45,14 @@ public class RobotConstants {
     MEXT = 2550,
 
     UNEXT = 0;
+
+    public static CustomPIDFCoefficients
+
+    liftPIDFCoefficients = new CustomPIDFCoefficients(
+            0.003,
+            0.003,
+            0,
+            0.0001
+    );
 
 }

@@ -1,9 +1,5 @@
 package auto;
 
-import static util.LiftVelocityPIDF.p;
-import static util.LiftVelocityPIDF.i;
-import static util.LiftVelocityPIDF.d;
-import static util.LiftVelocityPIDF.f;
 import static util.RobotConstants.CLAW_CLOSED;
 import static util.RobotConstants.CLAW_DOWN;
 import static util.RobotConstants.CLAW_OPEN;
@@ -11,11 +7,11 @@ import static util.RobotConstants.CLAW_UP_BASKET;
 import static util.RobotConstants.DOWN;
 import static util.RobotConstants.LOW_BASKET;
 import static util.RobotConstants.MEXT;
+import static util.RobotConstants.liftPIDFCoefficients;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.arcrobotics.ftclib.controller.PIDFController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
 import com.pedropathing.localization.PoseUpdater;
@@ -25,6 +21,7 @@ import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
 import com.pedropathing.util.DashboardPoseTracker;
 import com.pedropathing.util.Drawing;
+import com.pedropathing.util.PIDFController;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -39,15 +36,14 @@ import util.Hardware;
 public class AutoRedBasket extends OpMode {
 
     public PoseUpdater poseUpdater;
+    public PIDFController controller;
     public DashboardPoseTracker dashboardPoseTracker;
     public Follower follower;
     public Timer pathTimer, opmodeTimer;
-    public double pidf;
     public static double startDelay = 800, scoreDelay = 600, openClaw = 400;
-    public int liftPos, liftTargetPos;
+    public int liftTargetPos;
     public Hardware robot;
     public Encoder encoder;
-    public PIDFController liftController;
     public int pathState;
 
     public Pose startPose = new Pose(135.5, 39, Math.toRadians(-90));
@@ -95,7 +91,7 @@ public class AutoRedBasket extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
-                liftTargetPos = LOW_BASKET;
+                setLiftTargetPosition(LOW_BASKET);
                 claw(CLAW_CLOSED);
                 clawWrist(CLAW_UP_BASKET);
                 extend(MEXT);
@@ -114,7 +110,7 @@ public class AutoRedBasket extends OpMode {
 
                 if(!follower.isBusy()) {
                     claw(CLAW_OPEN);
-                    liftTargetPos = DOWN;
+                    setLiftTargetPosition(DOWN);
                     clawWrist(CLAW_DOWN);
                     follower.followPath(getFirstSample, true);
                     setPathState(2);
@@ -187,15 +183,13 @@ public class AutoRedBasket extends OpMode {
         follower.update();
         autonomousPathUpdate();
 
-        lift();
-
         if((pathState == 3 || pathState == 5 || pathState == 7) && pathTimer.getElapsedTime() >= openClaw + scoreDelay) {
-            liftTargetPos = LOW_BASKET;
+            setLiftTargetPosition(LOW_BASKET);
             clawWrist(CLAW_UP_BASKET);
         }
 
         if((pathState == 4 || pathState == 6) && pathTimer.getElapsedTime() >= openClaw + scoreDelay) {
-            liftTargetPos = DOWN;
+            setLiftTargetPosition(DOWN);
             clawWrist(CLAW_DOWN);
         }
 
@@ -225,6 +219,8 @@ public class AutoRedBasket extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
+        controller = new PIDFController(liftPIDFCoefficients);
+
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
@@ -232,10 +228,6 @@ public class AutoRedBasket extends OpMode {
 
         robot = new Hardware(hardwareMap);
         encoder = new Encoder();
-
-        robot.lift.stopAndResetEncoder();
-
-        liftController = new PIDFController(p, i, d, f);
 
         FtcDashboard dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
@@ -256,11 +248,17 @@ public class AutoRedBasket extends OpMode {
         setPathState(0);
     }
 
-    public void lift() {
-        liftController.setPIDF(p, i, d, f);
-        liftPos = robot.leftLift.getCurrentPosition();
-        pidf = liftController.calculate(liftPos, liftTargetPos);
-        robot.lift.set(pidf);
+    public void updateLift() {
+        controller.updateError(liftTargetPos - robot.leftLift.getCurrentPosition());
+        double liftPower = controller.runPIDF();
+        robot.leftLift.setPower(liftPower);
+        robot.rightLift.setPower(liftPower);
+    }
+
+    public void setLiftTargetPosition(int position) {
+        liftTargetPos = position;
+        controller.reset();
+        updateLift();
     }
 
     public void extend(int position) {
