@@ -49,13 +49,19 @@ public class Drive2 extends OpMode {
     public Timer intakeTime, extSubT, submersibleTime, basket, timer;
     public Gamepad previousGamepad1, currentGamepad1;
     public boolean L1, CROSS, CIRCLE, TRIANGLE;
+<<<<<<< Updated upstream
     public double pidf;
     public int liftPos, liftTargetPos, extTargetPos, clawRot;
+=======
+    public static double pidf;
+    public static int liftPos, liftTargetPos, extTargetPos, clawRot;
+>>>>>>> Stashed changes
 
     public static double clawPos = CLAW_OPEN;
     public static double clawWristPos = CLAW_MID;
     public static double clawRotPos = CLAW_ROT_VR;
 
+<<<<<<< Updated upstream
     public static double
             intakeTimeV = 500,
             intakeExt = 1000,
@@ -64,6 +70,12 @@ public class Drive2 extends OpMode {
             submersibleTimeV2 = 1000,
             basketV = 900,
             timerV = 500;
+=======
+    public static int
+        liftSus = 2500,
+        liftJos = 0;
+
+>>>>>>> Stashed changes
 
     @Override
     public void init() {
@@ -71,6 +83,10 @@ public class Drive2 extends OpMode {
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
 
+<<<<<<< Updated upstream
+=======
+        liftTargetPos = liftJos;
+>>>>>>> Stashed changes
         robot = new Hardware(hardwareMap);
         encoder = new Encoder();
 
@@ -78,6 +94,10 @@ public class Drive2 extends OpMode {
 
         previousGamepad1 = new Gamepad();
         currentGamepad1 = new Gamepad();
+<<<<<<< Updated upstream
+=======
+        extTargetPos = 200;
+>>>>>>> Stashed changes
 
         intakeTime = new Timer();
         extSubT = new Timer();
@@ -93,6 +113,7 @@ public class Drive2 extends OpMode {
 
     @Override
     public void loop() {
+<<<<<<< Updated upstream
         if(gamepad1.dpad_down) clawPos = CLAW_CLOSED;
         else if(gamepad1.dpad_up) clawPos = CLAW_OPEN;
 
@@ -101,18 +122,54 @@ public class Drive2 extends OpMode {
 
         if(gamepad1.left_bumper) clawRotPos = CLAW_ROT_VR;
         else if(gamepad1.right_bumper) clawRotPos = CLAW_ROT_OR;
+=======
+        drive(gamepad1);
+>>>>>>> Stashed changes
 
         previousGamepad1.copy(currentGamepad1);
         currentGamepad1.copy(gamepad1);
 
+<<<<<<< Updated upstream
         // robot.lift.set(pidf);
+=======
+        if(gamepad1.dpad_down) clawPos = CLAW_CLOSED;
+        else if(gamepad1.dpad_up) clawPos = CLAW_OPEN;
+
+        if (currentGamepad1.dpad_left && !previousGamepad1.dpad_left) clawRotPos = CLAW_DOWN;
+
+        if(currentGamepad1.dpad_left) {
+            clawWristPos = CLAW_DOWN;
+        } else if(currentGamepad1.dpad_right) {
+            clawWristPos = CLAW_UP_BASKET;
+        };
+
+        if(currentGamepad1.left_trigger != 0) clawRotPos = CLAW_ROT_VR;
+        else if(currentGamepad1.right_trigger != 0) clawRotPos = CLAW_ROT_OR;
+
+        if (currentGamepad1.triangle) {
+            liftTargetPos = liftSus;
+        } else if (currentGamepad1.cross) {
+            liftTargetPos = liftJos;
+        }
+
+
+        liftController.setPIDF(p, i, d, f);
+
+        liftPos = robot.leftLift.getCurrentPosition();
+        pidf = liftController.calculate(liftPos, liftTargetPos);
+
+        robot.lift.set(pidf);
+>>>>>>> Stashed changes
 
         encoder.runTo(robot.extend, extTargetPos);
         robot.clawWrist.setPosition(clawWristPos);
         robot.claw.setPosition(clawPos);
         robot.clawRotation.setPosition(clawRotPos);
 
+<<<<<<< Updated upstream
         //Ma fut pe el dashboard si pe el robot <3 Doamne Ajuta.
+=======
+>>>>>>> Stashed changes
         telemetry.addData("Claw Position Set", clawPos);
         telemetry.addData("Claw Actual Position", robot.claw.getPosition());
         telemetry.addData("ClawWrist Position Set", clawWristPos);
@@ -146,6 +203,7 @@ public class Drive2 extends OpMode {
         robot.rightRear.setPower(rightRearPower);
     }
 
+<<<<<<< Updated upstream
     public void intakeSpecimen() {
         clawRot = 0;
         extTargetPos = UNEXT;
@@ -211,4 +269,7 @@ public class Drive2 extends OpMode {
         clawRot = 0;
         clawPos = CLAW_OPEN;
     }
+=======
+
+>>>>>>> Stashed changes
 }
